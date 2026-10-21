@@ -26,7 +26,7 @@ $isValid = $req && in_array($req['status'], $allowedStatuses, true);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Document Verification — Barangay Pitipiwpiwwiwiw</title>
+<title>Document Verification — Barangay Lawacamulag, San Jose, Tarlac</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@ $isValid = $req && in_array($req['status'], $allowedStatuses, true);
     <?php if ($isValid): ?>
       <div class="icon valid">✓</div>
       <h1>Document Verified</h1>
-      <p class="sub">This certificate was issued by Barangay Pitipiwpiwwiwiw.</p>
+      <p class="sub">This certificate was issued by Barangay Lawacamulag, San Jose, Tarlac.</p>
       <div class="details">
         <div class="row"><span>Document</span><span><?= htmlspecialchars($req['document_name']) ?></span></div>
         <div class="row"><span>Issued to</span><span><?= htmlspecialchars($req['first_name'] . ' ' . $req['last_name']) ?></span></div>

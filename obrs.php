@@ -8,7 +8,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Barangay Pitipiwpiwwiwiw — Document Request Services</title>
+<title>Barangay Lawacamulag, San Jose, Tarlac — Document Request Services</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -356,7 +356,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
     <div class="brand">
       <img class="seal-mark" src="logo.jpg" alt="Official Barangay Seal">
       <div class="brand-text">
-        <div class="eyebrow">Barangay Pitipiwpiwwiwiw</div>
+        <div class="eyebrow">Barangay Lawacamulag, San Jose, Tarlac</div>
         <div class="name">Document Services</div>
       </div>
     </div>
@@ -401,7 +401,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
       <div class="cert">
         <div class="cert-head">
           <div class="rep">Republic of Philippines</div>
-          <div class="office">Barangay Pitipiwpiwwiwiw</div>
+          <div class="office">Barangay Lawacamulag, San Jose, Tarlac</div>
         </div>
         <h3 class="cert-title">Barangay Clearance</h3>
         <div class="cert-row"><span>Requested by</span><span>Rodigero, Jerald</span></div>
@@ -413,7 +413,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
         </div>
         <div class="stamp">
           <div class="a">APPROVED</div>
-          <div class="b">Pitipiwpiwwiwiw</div>
+          <div class="b">Lawacamulag, San Jose, Tarlac</div>
         </div>
       </div>
     </div>
@@ -527,11 +527,11 @@ $residentName = $_SESSION['resident_name'] ?? '';
         <div class="foot-brand">
           <img class="seal-mark" src="logo.jpg" alt="Official Barangay Seal">
           <div class="brand-text">
-            <div class="name">Barangay Pitipiwpiwwiwiw</div>
+            <div class="name">Barangay Lawacamulag, San Jose, Tarlac</div>
             <div class="eyebrow">Document services</div>
           </div>
         </div>
-        <p>Barangay Hall, Pitipiwpiwwiwiw, Philippines</p>
+        <p>Barangay Hall, Lawacamulag, San Jose, Tarlac, Philippines</p>
         <p>Open Monday–Friday, 8:00 AM–5:00 PM</p>
       </div>
       <div class="foot-col">
@@ -547,7 +547,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
       </div>
     </div>
     <div class="foot-bottom">
-      <span>&copy; 2026 Barangay Pitipiwpiwwiwiw. All requests are subject to verification.</span>
+      <span>&copy; 2026 Barangay Lawacamulag, San Jose, Tarlac. All requests are subject to verification.</span>
       <span class="mono">Rep. of the Philippines</span>
     </div>
   </div>
