@@ -63,7 +63,7 @@ $statusLabels = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Barangay Pitipiwpiwwiwiw</title>
+<title>Dashboard — Barangay Lawacamulag, San Jose, Tarlac</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -171,7 +171,7 @@ $statusLabels = [
   <div class="brand">
     <div class="seal-mark"><img src="logo.jpg" alt="Barangay seal"></div>
     <div>
-      <div class="eyebrow">Barangay Pitipiwpiwwiwiw</div>
+      <div class="eyebrow">Barangay Lawacamulag, San Jose, Tarlac</div>
       <div class="name">Staff Dashboard</div>
     </div>
   </div>

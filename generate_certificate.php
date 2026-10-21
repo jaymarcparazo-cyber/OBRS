@@ -60,8 +60,8 @@ if ($req['on_behalf_of']) {
 $address = $req['address'];
 
 // Fixed location details
-$barangayName = 'Pitipiwpiwwiwiw';
-$municipality = 'Dimasapulan';
+$barangayName = 'Lawacamulag';
+$municipality = 'San Jose';
 $province     = 'Tarlac';
 
 // Build an absolute verification URL for the QR code
@@ -442,7 +442,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
             <div class="watermark-line">
                 OFFICIAL COPY
                 &nbsp;&nbsp;
-                BARANGAY <?= strtoupper(htmlspecialchars($barangayName)) ?>
+                BARANGAY <?= strtoupper(htmlspecialchars("$barangayName, $municipality, $province")) ?>
                 &nbsp;&nbsp;
                 OFFICIAL COPY
             </div>
@@ -457,11 +457,11 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
             </div>
 
             <div class="office">
-                Barangay Pitipiwpiwwiwiw
+                Barangay <?= htmlspecialchars("$barangayName, $municipality, $province") ?>
             </div>
 
             <div class="addr">
-                Barangay Hall, Dimasapulan, Tarlac, Philippines
+                Barangay Hall, <?= htmlspecialchars("$barangayName, $municipality, $province") ?>, Philippines
             </div>
         </div>
 
