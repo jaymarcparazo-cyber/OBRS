@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_init.php';
 require __DIR__ . '/config.php';
 
 $ref = trim($_GET['ref'] ?? '');
@@ -105,7 +105,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet">
 
-<style>
+<style nonce="<?= $csp_nonce ?>">
   :root{
     --paper:#F3EEE1;
     --ink:#211D16;
@@ -428,9 +428,8 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
 <body>
 
 <div class="toolbar">
-    <a href="javascript:void(0)" onclick="smartBack()">&larr; Back</a>
-
-    <button class="print-btn" onclick="window.print()">
+    <a href="#" id="backLink">&larr; Back</a>
+<button class="print-btn" id="printBtn">
         Print / Save as PDF
     </button>
 </div>
@@ -595,7 +594,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
 
 </div>
 
-<script>
+<script nonce="<?= $csp_nonce ?>">
 function smartBack() {
 
     const fallbackUrl =
@@ -607,6 +606,13 @@ function smartBack() {
         window.location.href = fallbackUrl;
     }
 }
+document.getElementById('backLink').addEventListener('click', function (e) {
+  e.preventDefault();
+  smartBack();
+});
+document.getElementById('printBtn').addEventListener('click', function () {
+  window.print();
+});
 </script>
 
 </body>

@@ -36,7 +36,7 @@ $statusLabels = [
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
+<style nonce="<?= $csp_nonce ?>">
   :root{
     --paper:#F3EEE1; --paper-2:#EAE3D2; --ink:#211D16; --ink-soft:#5B564A;
     --blue:#1E3A5F; --blue-deep:#122845; --red:#9B2B22; --gold:#B08D3E; --line:#C9C1AC;
@@ -176,8 +176,7 @@ $statusLabels = [
             </td>
             <td>
               <?php if ($r['status'] === 'pending'): ?>
-                <span class="cancel-trigger" onclick="cancelRequest('<?= htmlspecialchars($r['reference_number'], ENT_QUOTES) ?>')">Cancel</span>
-              <?php else: ?>
+<span class="cancel-trigger" data-ref="<?= htmlspecialchars($r['reference_number'], ENT_QUOTES) ?>">Cancel</span>              <?php else: ?>
                 <span style="color:var(--ink-soft);">—</span>
               <?php endif; ?>
             </td>
@@ -187,15 +186,15 @@ $statusLabels = [
     </table>
   <?php endif; ?>
 </div>
-
-<div class="attachment-modal-overlay" id="attachmentModal" onclick="closeAttachmentModal()">
-  <div class="attachment-modal-box" onclick="event.stopPropagation()">
-    <button class="attachment-modal-close" onclick="closeAttachmentModal()" aria-label="Close">&times;</button>
+<div class="attachment-modal-overlay" id="attachmentModal">
+  <div class="attachment-modal-box">
+    <button class="attachment-modal-close" aria-label="Close">&times;</button>
     <div id="attachmentModalContent"></div>
   </div>
 </div>
 
-<script>
+<script nonce="<?= $csp_nonce ?>">
+  
 function openAttachmentModal(path, ext) {
   const content = document.getElementById('attachmentModalContent');
   if (['jpg','jpeg','png'].includes(ext)) {
@@ -230,6 +229,14 @@ async function cancelRequest(ref) {
     alert('Could not reach the server. Please try again.');
   }
 }
+document.addEventListener('click', function (e) {
+  const v = e.target.closest('.view-trigger');
+  if (v) { openAttachmentModal(v.dataset.path, v.dataset.ext); return; }
+  const c = e.target.closest('.cancel-trigger');
+  if (c) { cancelRequest(c.dataset.ref); return; }
+  if (e.target.closest('.attachment-modal-close')) { closeAttachmentModal(); return; }
+  if (e.target.id === 'attachmentModal') closeAttachmentModal();
+});
 </script>
 
 </body>

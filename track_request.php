@@ -4,6 +4,7 @@
 
 header('Content-Type: application/json');
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/session_init.php';
 
 $ref = trim($_GET['ref'] ?? '');
 

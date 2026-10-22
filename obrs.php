@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_init.php';
 $isLoggedIn = !empty($_SESSION['resident_id']);
 $residentName = $_SESSION['resident_name'] ?? '';
 ?>
@@ -12,7 +12,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
+<style nonce="<?= $csp_nonce ?>">
   :root{
     --paper:#F3EEE1;
     --paper-2:#EAE3D2;
@@ -611,7 +611,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
   </div>
 </div>
 
-<script>
+<script nonce="<?= $csp_nonce ?>">
   const isLoggedIn = <?= $isLoggedIn ? 'true' : 'false' ?>;
 
   const docData = {

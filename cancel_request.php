@@ -3,7 +3,7 @@
 // Cancels a request — only if it belongs to the logged-in resident AND is still 'pending'.
 // Returns: { success: true } or { success: false, error: "..." }
 
-session_start();
+require_once __DIR__ . '/session_init.php';
 ob_start();
 header('Content-Type: application/json');
 require __DIR__ . '/config.php';

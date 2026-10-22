@@ -3,7 +3,7 @@
 // Resident identity now comes from the logged-in session, not the form.
 // Returns: { success: true, reference_number: "BC-2026-0007" } or { success: false, error: "..." }
 
-session_start();
+require_once __DIR__ . '/session_init.php';
 ob_start(); // buffer output so a stray PHP warning can't corrupt the JSON response
 header('Content-Type: application/json');
 require __DIR__ . '/config.php';

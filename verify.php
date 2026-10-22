@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/session_init.php';
 
 $ref = trim($_GET['ref'] ?? '');
 $req = null;
@@ -30,7 +31,7 @@ $isValid = $req && in_array($req['status'], $allowedStatuses, true);
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style>
+<style nonce="<?= $csp_nonce ?>">
   :root{--paper:#F3EEE1;--ink:#211D16;--ink-soft:#5B564A;--blue:#1E3A5F;--blue-deep:#122845;--red:#9B2B22;--gold:#B08D3E;--line:#C9C1AC;--green:#2F6B33;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--paper);color:var(--ink);font-family:'Public Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
