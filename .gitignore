@@ -4,3 +4,5 @@ config.php
 node_modules/
 vendor/
 uploads/
+face_verification/.venv/
+face_verification/__pycache__/

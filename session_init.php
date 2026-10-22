@@ -12,6 +12,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/security_headers.php';
 
+function app_asset_url($asset) {
+    $scriptDirectory = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    $basePath = ($scriptDirectory === '/' || $scriptDirectory === '.') ? '' : rtrim($scriptDirectory, '/');
+
+    return $basePath . '/' . ltrim($asset, '/');
+}
+
 function csrf_token() {
     if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(32));
     return $_SESSION['csrf'];

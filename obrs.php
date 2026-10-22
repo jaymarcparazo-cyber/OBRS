@@ -8,381 +8,51 @@ $residentName = $_SESSION['resident_name'] ?? '';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<base href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>">
 <title>Barangay Lawacamulag, San Jose, Tarlac — Document Request Services</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<style nonce="<?= $csp_nonce ?>">
-  :root{
-    --paper:#F3EEE1;
-    --paper-2:#EAE3D2;
-    --ink:#211D16;
-    --ink-soft:#5B564A;
-    --blue:#1E3A5F;
-    --blue-deep:#122845;
-    --red:#9B2B22;
-    --gold:#B08D3E;
-    --line:#C9C1AC;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Public Sans',sans-serif;
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3,.display{font-family:'Fraunces',serif;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  a{color:inherit;text-decoration:none;}
-  img{max-width:100%;display:block;}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
-
-  /* HEADER */
-  header{
-    position:sticky;top:0;z-index:50;
-    background:rgba(243,238,225,0.92);
-    backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--line);
-  }
-  .nav{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 32px;max-width:1120px;margin:0 auto;
-  }
-  .brand{display:flex;align-items:center;gap:12px;}
-  .seal-mark{
-    width:38px;
-    height:38px;
-    border-radius:50%;
-    object-fit:cover;
-    flex-shrink:0;
-  }
-  .brand-text{line-height:1.2;}
-  .brand-text .eyebrow{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);}
-  .brand-text .name{font-family:'Fraunces',serif;font-weight:600;font-size:17px;}
-  nav.links{display:flex;gap:32px;font-size:14px;font-weight:500;}
-  nav.links a{color:var(--ink-soft);position:relative;padding-bottom:2px;transition:color .15s;}
-  nav.links a::after{
-    content:"";position:absolute;left:0;bottom:-2px;width:0;height:1px;
-    background:var(--gold);transition:width .2s ease;
-  }
-  nav.links a:hover{color:var(--ink);}
-  nav.links a:hover::after{width:100%;}
-  .nav-cta{
-    background:var(--blue);color:var(--paper);
-    padding:10px 20px;border-radius:2px;font-size:14px;font-weight:500;
-    border:1px solid var(--blue);
-    cursor:pointer;
-  }
-  .nav-cta:hover{background:var(--blue-deep);}
-  .mobile-only{display:none;}
-
-  .notif-wrap{position:relative;display:flex;align-items:center;}
-  .notif-bell{
-    background:none;border:none;font-size:19px;cursor:pointer;position:relative;
-    padding:6px;line-height:1;
-  }
-  .notif-badge{
-    position:absolute;top:0;right:0;background:var(--red);color:#fff;
-    font-size:10px;font-weight:600;border-radius:999px;min-width:16px;height:16px;
-    display:flex;align-items:center;justify-content:center;padding:0 3px;
-  }
-  .notif-dropdown{
-    display:none;position:absolute;top:calc(100% + 10px);right:0;width:320px;
-    background:#FBF9F2;border:1px solid var(--line);box-shadow:0 10px 28px rgba(0,0,0,0.15);
-    z-index:80;
-  }
-  .notif-dropdown.open{display:block;}
-  .notif-header{
-    padding:12px 16px;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;
-    color:var(--ink-soft);border-bottom:1px solid var(--line);background:var(--paper-2);
-  }
-  .notif-list{max-height:320px;overflow-y:auto;}
-  .notif-item{
-    padding:12px 16px;font-size:13px;border-bottom:1px solid var(--line);color:var(--ink);
-  }
-  .notif-item:last-child{border-bottom:none;}
-  .notif-item.unread{background:#EFF4F9;}
-  .notif-time{font-size:11px;color:var(--ink-soft);margin-top:3px;}
-  .notif-empty{padding:24px 16px;text-align:center;font-size:13px;color:var(--ink-soft);}
-
-  /* HERO */
-  .hero{padding:88px 0 72px;}
-  .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:center;}
-  .eyebrow-tag{
-    display:inline-flex;align-items:center;gap:8px;
-    font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--red);
-    font-weight:600;margin-bottom:20px;
-  }
-  .eyebrow-tag::before{content:"";width:6px;height:6px;background:var(--red);border-radius:50%;display:inline-block;}
-  h1.headline{
-    font-size:47px;font-weight:600;line-height:1.08;letter-spacing:-0.01em;
-    margin-bottom:22px;color:var(--blue-deep);
-  }
-  .headline em{font-style:italic;color:var(--red);}
-  .sub{font-size:17px;color:var(--ink-soft);max-width:440px;margin-bottom:34px;}
-  .cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
-  .btn-primary{
-    background:var(--red);color:#fff;padding:14px 26px;border-radius:2px;
-    font-size:15px;font-weight:500;border:1px solid var(--red);
-    transition:background .15s,transform .15s,box-shadow .15s;
-    cursor:pointer;
-  }
-  .btn-primary:hover{background:#7f2019;transform:translateY(-2px);box-shadow:0 6px 14px rgba(155,43,34,0.28);}
-  .btn-primary:active{transform:translateY(0);box-shadow:none;}
-  .btn-secondary{
-    padding:14px 22px;border-radius:2px;font-size:15px;font-weight:500;
-    border:1px solid var(--ink); color:var(--ink);
-    cursor:pointer; background:transparent;
-    transition:background .15s,transform .15s;
-  }
-  .btn-secondary:hover{background:var(--paper-2);transform:translateY(-2px);}
-  .btn-secondary:active{transform:translateY(0);}
-
-  /* Certificate mock + stamp */
-  .cert-stage{display:flex;justify-content:center;align-items:center;}
-  .cert{
-    position:relative;width:100%;max-width:400px;
-    background:#FBF9F2;border:1px solid var(--line);
-    padding:34px 32px 40px;
-    box-shadow:6px 6px 0 var(--paper-2), 0 1px 2px rgba(0,0,0,0.08);
-  }
-  .cert::before{
-    content:"";position:absolute;inset:8px;border:1px solid var(--gold);opacity:0.5;pointer-events:none;
-  }
-  .cert-head{text-align:center;margin-bottom:22px;}
-  .cert-head .rep{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-soft);}
-  .cert-head .office{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--blue);margin-top:4px;}
-  .cert-title{font-family:'Fraunces',serif;font-size:21px;font-weight:600;text-align:center;margin:14px 0 20px;color:var(--ink);}
-  .cert-row{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px dashed var(--line);color:var(--ink-soft);}
-  .cert-row span:last-child{color:var(--ink);font-weight:500;}
-  .cert-foot{margin-top:24px;display:flex;justify-content:space-between;align-items:flex-end;}
-  .sig-line{font-size:10px;color:var(--ink-soft);}
-  .sig-line .line{width:100px;border-bottom:1px solid var(--ink-soft);margin-bottom:5px;height:18px;}
-  .stamp{
-    position:absolute;right:26px;bottom:34px;
-    width:112px;height:112px;border-radius:50%;
-    border:3px solid var(--red);color:var(--red);
-    display:flex;align-items:center;justify-content:center;flex-direction:column;
-    font-family:'Fraunces',serif;font-weight:600;letter-spacing:0.03em;
-    transform:rotate(-14deg) scale(0);
-    opacity:0;
-    animation: stamp-in 0.4s cubic-bezier(.2,1.4,.4,1) 0.7s forwards;
-    mix-blend-mode:multiply;
-  }
-  .stamp .a{font-size:16px;line-height:1;}
-  .stamp .b{font-size:8px;letter-spacing:0.15em;margin-top:3px;}
-  @keyframes stamp-in{
-    0%{transform:rotate(-14deg) scale(2.4);opacity:0;}
-    60%{transform:rotate(-14deg) scale(0.94);opacity:1;}
-    100%{transform:rotate(-14deg) scale(1);opacity:1;}
-  }
-  .ticker{
-    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-    padding:13px 0;background:var(--paper-2);
-  }
-  .ticker .wrap{display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--ink-soft);}
-  .ticker .mono{color:var(--blue);font-weight:500;}
-  .pulse{width:7px;height:7px;background:var(--red);border-radius:50%;flex-shrink:0;animation:pulse 1.8s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
-
-  /* SECTION HEADERS */
-  section{padding:80px 0;}
-  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
-  .reveal.in-view{opacity:1;transform:translateY(0);}
-  .sec-label{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:12px;}
-  .sec-title{font-size:32px;font-weight:600;color:var(--blue-deep);margin-bottom:14px;max-width:560px;}
-  .sec-sub{color:var(--ink-soft);max-width:520px;font-size:15.5px;margin-bottom:48px;}
-
-  /* SERVICES - folder tabs, now interactive buttons */
-  .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-  .doc-card{
-    background:#FBF9F2;border:1px solid var(--line);position:relative;
-    padding:26px 22px 22px;transition:border-color .15s,transform .15s,box-shadow .15s;
-    cursor:pointer;
-    text-align:left;
-    font-family:inherit;
-    color:inherit;
-  }
-  .doc-card::before{
-    content:attr(data-tab);position:absolute;top:-11px;left:22px;
-    background:var(--blue);color:var(--paper);
-    font-size:10px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;
-    padding:4px 10px;
-  }
-  .doc-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.1);}
-  .doc-card:active{transform:translateY(0);}
-  .doc-card:focus-visible{
-    outline:2px solid var(--blue);
-    outline-offset:3px;
-  }
-  .doc-card h3{font-size:17px;font-weight:600;margin:8px 0 8px;color:var(--ink);}
-  .doc-card p{font-size:13.5px;color:var(--ink-soft);margin-bottom:14px;}
-  .doc-meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);border-top:1px dashed var(--line);padding-top:12px;}
-  .doc-meta .mono{color:var(--blue);}
-
-  /* HOW IT WORKS - ticket stubs */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);}
-  .step{
-    padding:32px 26px;position:relative;background:#FBF9F2;
-    border-right:1px dashed var(--line);
-    transition:background .15s;
-  }
-  .step:hover{background:var(--paper-2);}
-  .step:last-child{border-right:none;}
-  .step-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--red);letter-spacing:0.06em;margin-bottom:14px;transition:letter-spacing .2s;}
-  .step:hover .step-num{letter-spacing:0.1em;}
-  .step h3{font-size:17px;font-weight:600;margin-bottom:8px;color:var(--blue-deep);}
-  .step p{font-size:14px;color:var(--ink-soft);}
-  .step::after{
-    content:"";position:absolute;top:0;bottom:0;right:-1px;width:1px;
-  }
-
-  /* TRACK */
-  .track-panel{
-    background:var(--blue-deep);color:var(--paper);
-    padding:56px 48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
-  }
-  .track-panel h2{color:#fff;font-size:27px;margin-bottom:12px;}
-  .track-panel p{color:#C9D3E0;font-size:14.5px;max-width:380px;}
-  .track-form{display:flex;flex-direction:column;gap:12px;}
-  .track-form label{font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#9FB1C9;}
-  .track-input-row{display:flex;gap:10px;}
-  .track-input-row input{
-    flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.25);
-    color:#fff;padding:13px 14px;font-family:'IBM Plex Mono',monospace;font-size:14px;border-radius:2px;
-  }
-  .track-input-row input::placeholder{color:#7C8CA3;}
-  .track-input-row button{
-    background:var(--gold);color:var(--blue-deep);border:none;padding:0 22px;
-    font-weight:600;font-size:14px;border-radius:2px;cursor:pointer;
-  }
-
-  /* FOOTER */
-  footer{background:var(--paper-2);border-top:1px solid var(--line);padding:56px 0 28px;}
-  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:48px;margin-bottom:40px;}
-  .foot-brand{display:flex;gap:12px;margin-bottom:14px;}
-  .foot-col h4{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin-bottom:14px;}
-  .foot-col a, .foot-col p{display:block;font-size:14px;color:var(--ink-soft);margin-bottom:9px;}
-  .foot-col a:hover{color:var(--blue);}
-  .foot-bottom{border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);}
-
-  /* REQUEST MODAL */
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(18,40,69,0.55);
-    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
-  }
-  .modal-overlay.open{display:flex;}
-  .modal-box{
-    background:#FBF9F2;border:1px solid var(--line);max-width:420px;width:100%;
-    padding:32px;position:relative;box-shadow:6px 6px 0 var(--paper-2);
-    max-height:90vh;overflow-y:auto;
-  }
-  .modal-close{
-    position:absolute;top:14px;right:16px;background:none;border:none;
-    font-size:22px;color:var(--ink-soft);cursor:pointer;line-height:1;
-    width:28px;height:28px;
-  }
-  .modal-close:hover{color:var(--ink);}
-  .modal-desc{font-size:13.5px;color:var(--ink-soft);margin:8px 0 20px;}
-  .modal-box h3{font-size:20px;font-weight:600;color:var(--blue-deep);}
-  #requestForm label{
-    display:block;font-size:12px;color:var(--ink-soft);margin-bottom:14px;
-  }
-  #requestForm input{
-    width:100%;margin-top:6px;padding:11px 12px;border:1px solid var(--line);
-    background:#fff;font-family:'Public Sans',sans-serif;font-size:14px;border-radius:2px;
-  }
-  #requestForm input:focus{outline:2px solid var(--blue);outline-offset:1px;}
-  #requestForm input[type="file"]{padding:8px;font-size:12.5px;}
-  .file-hint{font-size:11.5px;color:var(--ink-soft);margin:-8px 0 14px;}
-  #requestForm label.checkbox-label{
-    display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);
-    margin-bottom:14px;cursor:pointer;
-  }
-  .checkbox-label input[type="checkbox"]{width:auto;margin:0;cursor:pointer;}
-  .beneficiary-fields{
-    background:var(--paper-2);border:1px solid var(--line);border-radius:2px;
-    padding:14px 14px 2px;margin-bottom:16px;
-  }
-  .form-error{
-    background:#F5E3E0;border:1px solid var(--red);color:var(--red);
-    font-size:12.5px;padding:9px 11px;border-radius:2px;margin-bottom:14px;
-  }
-  .modal-success{text-align:center;padding:12px 0 4px;}
-  .success-check{
-    width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:24px;
-    margin:0 auto 18px;
-  }
-  .modal-success h3{margin-bottom:4px;}
-  .modal-success p{font-size:13.5px;color:var(--ink-soft);}
-  .ref-display{
-    font-size:22px;font-weight:500;color:var(--blue-deep);
-    background:var(--paper-2);border:1px dashed var(--line);
-    padding:12px;margin:10px 0;letter-spacing:0.04em;
-  }
-  .success-note{font-size:12px;margin-bottom:6px;}
-  .track-result{
-    margin-top:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.25);
-    padding:16px 18px;font-size:13.5px;
-  }
-  .track-result .tr-status{
-    display:inline-block;font-size:11px;letter-spacing:0.05em;text-transform:uppercase;
-    padding:3px 9px;background:var(--gold);color:var(--blue-deep);font-weight:600;margin-bottom:8px;
-  }
-  .track-result .tr-row{display:flex;justify-content:space-between;color:#C9D3E0;padding:3px 0;}
-  .track-result .tr-row span:last-child{color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
-  .track-error{color:#F0B8B0;font-size:13px;margin-top:12px;}
-
-  @media (max-width:860px){
-    .hero-grid{grid-template-columns:1fr;}
-    .cert-stage{margin-top:20px;}
-    nav.links{display:none;}
-    .services-grid{grid-template-columns:1fr;}
-    .steps{grid-template-columns:1fr;}
-    .step{border-right:none;border-bottom:1px dashed var(--line);}
-    .track-panel{grid-template-columns:1fr;padding:36px 24px;}
-    .foot-grid{grid-template-columns:1fr;gap:28px;}
-    h1.headline{font-size:34px;}
-  }
-</style>
+<link rel="stylesheet" href="<?= htmlspecialchars(app_asset_url('obrs.css'), ENT_QUOTES) ?>">
 </head>
 <body>
 
-<header>
+<header id="top">
   <div class="nav">
-    <div class="brand">
-      <img class="seal-mark" src="logo.jpg" alt="Official Barangay Seal">
+    <a class="brand home-logo-link" href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>#top" aria-label="Home">
+      <img class="seal-mark" src="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>" alt="Official Barangay Seal">
       <div class="brand-text">
         <div class="eyebrow">Barangay Lawacamulag, San Jose, Tarlac</div>
         <div class="name">Document Services</div>
       </div>
-    </div>
-    <nav class="links">
-      <a href="#services">Services</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#track">Track a request</a>
-      <a href="#contact">Contact</a>
-      <?php if ($isLoggedIn): ?>
-        <a href="my_requests.php">My requests</a>
-      <?php endif; ?>
-    </nav>
-    <?php if ($isLoggedIn): ?>
-      <div class="notif-wrap">
-        <button class="notif-bell" id="notifBell" aria-label="Notifications">
-          🔔<span class="notif-badge" id="notifBadge" hidden>0</span>
-        </button>
-        <div class="notif-dropdown" id="notifDropdown">
-          <div class="notif-header">Notifications</div>
-          <div id="notifList" class="notif-list"></div>
-        </div>
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNav">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-menu" id="primaryNav">
+      <nav class="links" aria-label="Main navigation">
+        <a href="#services">Services</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#track">Track a request</a>
+        <a href="#contact">Contact</a>
+        <?php if ($isLoggedIn): ?>
+          <a href="my_requests.php">My requests</a>
+        <?php endif; ?>
+      </nav>
+      <div class="nav-actions">
+        <?php if ($isLoggedIn): ?>
+          <div class="notif-wrap">
+            <button class="notif-bell" id="notifBell" aria-label="Notifications">
+              &#128276;<span class="notif-badge" id="notifBadge" hidden>0</span>
+            </button>
+            <div class="notif-dropdown" id="notifDropdown">
+              <div class="notif-header">Notifications</div>
+              <div id="notifList" class="notif-list"></div>
+            </div>
+          </div>
+          <a href="#services" class="nav-cta">Request a document</a>
+        <?php else: ?>
+          <a href="resident_login.php" class="nav-cta">Log in to request</a>
+        <?php endif; ?>
       </div>
-      <a href="#services" class="nav-cta">Request a document</a>
-    <?php else: ?>
-      <a href="resident_login.php" class="nav-cta">Log in to request</a>
-    <?php endif; ?>
+    </div>
   </div>
 </header>
 
@@ -404,9 +74,9 @@ $residentName = $_SESSION['resident_name'] ?? '';
           <div class="office">Barangay Lawacamulag, San Jose, Tarlac</div>
         </div>
         <h3 class="cert-title">Barangay Clearance</h3>
-        <div class="cert-row"><span>Requested by</span><span>Rodigero, Jerald</span></div>
+        <div class="cert-row"><span>Requested by</span><span>Resident</span></div>
         <div class="cert-row"><span>Purpose</span><span>Employment</span></div>
-        <div class="cert-row"><span>Reference no.</span><span class="mono">BC-2026-0182</span></div>
+        <div class="cert-row"><span>Reference no.</span><span class="mono">SAMPLE-BC-0001</span></div>
         <div class="cert-row"><span>Date issued</span><span>July 8, 2026</span></div>
         <div class="cert-foot">
           <div class="sig-line"><div class="line"></div>Barangay Chairman</div>
@@ -423,9 +93,10 @@ $residentName = $_SESSION['resident_name'] ?? '';
 <div class="ticker">
   <div class="wrap">
     <span class="pulse"></span>
-    <span>Now serving queue no.</span>
-    <span class="mono">0182</span>
-    <span>&middot; average processing time: 1 business day</span>
+    <span id="queueNowServingLabel">Now serving queue no.</span>
+    <span class="mono" id="queueNowServingNumber">—</span>
+    <span id="queueLastCalled" aria-live="polite"></span>
+    <span id="queueWaitingCount">Loading today’s queue…</span>
   </div>
 </div>
 
@@ -511,7 +182,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
       <div class="track-form">
         <label for="ref">Reference number</label>
         <div class="track-input-row">
-          <input id="ref" type="text" placeholder="e.g. BC-2026-0182">
+          <input id="ref" type="text" placeholder="e.g. BC-2026-0001">
           <button type="button" id="trackBtn">Track</button>
         </div>
         <div id="trackResult"></div>
@@ -525,7 +196,9 @@ $residentName = $_SESSION['resident_name'] ?? '';
     <div class="foot-grid">
       <div class="foot-col">
         <div class="foot-brand">
-          <img class="seal-mark" src="logo.jpg" alt="Official Barangay Seal">
+          <a class="home-logo-link" href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>#top" aria-label="Home">
+            <img class="seal-mark" src="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>" alt="Official Barangay Seal">
+          </a>
           <div class="brand-text">
             <div class="name">Barangay Lawacamulag, San Jose, Tarlac</div>
             <div class="eyebrow">Document services</div>
@@ -543,12 +216,15 @@ $residentName = $_SESSION['resident_name'] ?? '';
       <div class="foot-col">
         <h4>Contact</h4>
         <a href="tel:+630000000000">(02) 87000</a>
-        <a href="mailto:office@barangaypitipiwpiwwiwiw.gov.ph">office@barangaypitipiwpiwwiwiw.gov.ph</a>
+        <a href="mailto:office@barangaylawacamulag.gov.ph">office@barangaylawacamulag.gov.ph</a>
       </div>
     </div>
     <div class="foot-bottom">
       <span>&copy; 2026 Barangay Lawacamulag, San Jose, Tarlac. All requests are subject to verification.</span>
       <span class="mono">Rep. of the Philippines</span>
+      <?php if ($isLoggedIn): ?>
+        <a class="footer-logout" href="<?= htmlspecialchars(app_asset_url('resident_logout.php'), ENT_QUOTES) ?>">Log out</a>
+      <?php endif; ?>
     </div>
   </div>
 </footer>
@@ -561,6 +237,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
     <h3 id="modalTitle">Barangay clearance</h3>
     <p class="modal-desc" id="modalDesc"></p>
     <form id="requestForm" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
       <input type="hidden" name="document_code" id="modalDocCode">
       <label>Purpose
         <input type="text" name="purpose" required placeholder="e.g. Employment, school enrollment">
@@ -590,14 +267,31 @@ $residentName = $_SESSION['resident_name'] ?? '';
         </label>
       </div>
 
-      <label>Valid ID or supporting document
-        <input type="file" name="attachment" accept=".jpg,.jpeg,.png,.pdf" required>
+      <label>Your government-issued ID image
+        <input type="file" name="attachment" accept="image/jpeg,image/png,.jpg,.jpeg,.png" required>
       </label>
-      <p class="file-hint">JPG, PNG, or PDF. Max 5MB.</p>
+      <p class="file-hint">Upload your own government-issued ID as a JPG or PNG (max 5MB). The system checks for government ID text before comparing its portrait with your camera selfie. Unrecognized documents can only be submitted for staff review.</p>
+
+      <div class="identity-check">
+        <p class="identity-explainer">The system checks for government-issued ID text, then compares your selfie with its portrait. An unrecognized document can only be submitted for staff review. A match does not prove that the ID itself is genuine.</p>
+        <label class="checkbox-label" id="faceConsentLabel">
+          <input type="checkbox" id="faceConsent" name="face_consent" value="1">
+          <span>I consent to a one-time face comparison. The selfie is processed temporarily by this barangay server and is not retained with my request.</span>
+        </label>
+        <div class="identity-controls" id="identityControls">
+          <button type="button" class="identity-secondary" id="startFaceScan" disabled>Start camera</button>
+          <video id="faceVideo" autoplay muted playsinline aria-label="Camera preview for face comparison" hidden></video>
+          <canvas id="faceCanvas" hidden></canvas>
+          <button type="button" class="identity-secondary" id="captureFace" hidden>Capture and compare</button>
+        </div>
+        <button type="button" class="identity-review-btn" id="manualIdentityReview" hidden>Continue with staff review</button>
+        <p class="identity-status" id="identityStatus" aria-live="polite">Choose a JPG or PNG ID image to continue.</p>
+        <input type="hidden" name="identity_mode" id="identityMode">
+      </div>
 
       <p id="formError" class="form-error" hidden></p>
 
-      <button type="submit" class="btn-primary" style="width:100%;margin-top:8px;">Submit request</button>
+      <button type="submit" class="btn-primary form-submit" id="submitRequest" disabled>Submit request</button>
     </form>
 
     <div id="modalSuccess" class="modal-success" hidden>
@@ -605,8 +299,11 @@ $residentName = $_SESSION['resident_name'] ?? '';
       <h3>Request submitted</h3>
       <p>Your reference number is</p>
       <div class="ref-display mono" id="refDisplay"></div>
+      <p class="success-note">Your queue number is</p>
+      <div class="ref-display mono" id="queueRefDisplay"></div>
       <p class="success-note">Save this number — you'll need it to track your request below.</p>
-      <button type="button" class="btn-primary" style="width:100%;margin-top:8px;" id="successClose">Done</button>
+      <p class="identity-success-note" id="identitySubmissionNotice"></p>
+      <button type="button" class="btn-primary form-submit" id="successClose">Done</button>
     </div>
   </div>
 </div>
@@ -632,6 +329,52 @@ $residentName = $_SESSION['resident_name'] ?? '';
   const modalSuccess = document.getElementById('modalSuccess');
   const formError = document.getElementById('formError');
   const refDisplay = document.getElementById('refDisplay');
+  const queueRefDisplay = document.getElementById('queueRefDisplay');
+  const navToggle = document.getElementById('navToggle');
+  const primaryNav = document.getElementById('primaryNav');
+  const idImageInput = requestForm.querySelector('[name="attachment"]');
+  const identityMode = document.getElementById('identityMode');
+  const faceConsent = document.getElementById('faceConsent');
+  const startFaceScan = document.getElementById('startFaceScan');
+  const captureFace = document.getElementById('captureFace');
+  const faceVideo = document.getElementById('faceVideo');
+  const faceCanvas = document.getElementById('faceCanvas');
+  const manualIdentityReview = document.getElementById('manualIdentityReview');
+  const identityStatus = document.getElementById('identityStatus');
+  const submitRequest = document.getElementById('submitRequest');
+  const identitySubmissionNotice = document.getElementById('identitySubmissionNotice');
+  let faceCameraStream = null;
+  let identityReady = false;
+
+  function closeNavigation() {
+    primaryNav.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-label', 'Open navigation menu');
+  }
+
+  navToggle.addEventListener('click', () => {
+    const isOpen = primaryNav.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', String(isOpen));
+    navToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  });
+
+  primaryNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', closeNavigation);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!primaryNav.contains(e.target) && !navToggle.contains(e.target)) {
+      closeNavigation();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1080) closeNavigation();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeNavigation();
+  });
 
   function openModal(tab){
     if (!isLoggedIn) {
@@ -640,6 +383,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
     }
     const data = docData[tab];
     if(!data) return;
+    requestForm.reset();
     modalTag.textContent = tab.toUpperCase();
     modalTitle.textContent = data.title;
     modalDesc.textContent = data.desc;
@@ -647,16 +391,62 @@ $residentName = $_SESSION['resident_name'] ?? '';
     formError.hidden = true;
     requestForm.hidden = false;
     modalSuccess.hidden = true;
+    resetIdentityCheck();
     document.getElementById('onBehalfToggle').checked = false;
     document.getElementById('beneficiaryFields').hidden = true;
+    document.getElementById('faceConsentLabel').hidden = false;
+    document.getElementById('identityControls').hidden = false;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
     modal.querySelector('input[type="text"]')?.focus();
   }
 
   function closeModal(){
+    stopFaceCamera();
     modal.classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  function stopFaceCamera(){
+    if (faceCameraStream) {
+      faceCameraStream.getTracks().forEach(track => track.stop());
+      faceCameraStream = null;
+    }
+    faceVideo.srcObject = null;
+    faceVideo.hidden = true;
+    captureFace.hidden = true;
+    startFaceScan.hidden = false;
+  }
+
+  function resetIdentityCheck(){
+    stopFaceCamera();
+    identityReady = false;
+    identityMode.value = '';
+    submitRequest.disabled = true;
+    manualIdentityReview.hidden = true;
+    startFaceScan.disabled = !idImageInput.files.length || !faceConsent.checked;
+    identityStatus.className = 'identity-status';
+    identityStatus.textContent = idImageInput.files.length
+        ? 'Agree to the one-time comparison, then start the camera.'
+      : 'Choose a JPG or PNG ID image to continue.';
+  }
+
+  function setIdentityResult(mode, message){
+    identityMode.value = mode;
+    identityReady = mode === 'match' || mode === 'review';
+    submitRequest.disabled = !identityReady;
+    manualIdentityReview.hidden = true;
+    identityStatus.className = `identity-status ${mode}`;
+    identityStatus.textContent = message;
+  }
+
+  function allowManualReview(message){
+    identityMode.value = '';
+    identityReady = false;
+    submitRequest.disabled = true;
+    manualIdentityReview.hidden = false;
+    identityStatus.className = 'identity-status unavailable';
+    identityStatus.textContent = message;
   }
 
   document.querySelectorAll('.doc-card').forEach(card => {
@@ -682,13 +472,129 @@ $residentName = $_SESSION['resident_name'] ?? '';
     beneficiaryFields.querySelector('input[name="relationship"]').required = on;
   });
 
+  idImageInput.addEventListener('change', resetIdentityCheck);
+  faceConsent.addEventListener('change', () => {
+    resetIdentityCheck();
+  });
+
+  startFaceScan.addEventListener('click', async () => {
+    if (!idImageInput.files.length || !faceConsent.checked) return;
+    try {
+      faceCameraStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {facingMode: 'user', width: {ideal: 1280}, height: {ideal: 720}}
+      });
+      faceVideo.srcObject = faceCameraStream;
+      faceVideo.hidden = false;
+      startFaceScan.hidden = true;
+      captureFace.hidden = false;
+      identityStatus.textContent = 'Center your face in the camera, then capture it for comparison.';
+    } catch (error) {
+      allowManualReview('Camera access is unavailable. Automatic matching cannot run; staff can review your ID instead.');
+    }
+  });
+
+  captureFace.addEventListener('click', async () => {
+    if (!faceVideo.videoWidth || !faceVideo.videoHeight) {
+      stopFaceCamera();
+      allowManualReview('The camera is not ready. Automatic matching cannot run; staff can review your ID instead.');
+      return;
+    }
+
+    faceCanvas.width = faceVideo.videoWidth;
+    faceCanvas.height = faceVideo.videoHeight;
+    faceCanvas.getContext('2d').drawImage(faceVideo, 0, 0);
+    const selfieBlob = await new Promise(resolve => faceCanvas.toBlob(resolve, 'image/jpeg', 0.9));
+    stopFaceCamera();
+
+    if (!selfieBlob) {
+      allowManualReview('The camera image could not be captured. Automatic matching cannot run; staff can review your ID instead.');
+      return;
+    }
+
+    captureFace.disabled = true;
+    identityStatus.textContent = 'Comparing the face with the ID image…';
+    const verificationData = new FormData();
+    verificationData.append('csrf_token', requestForm.elements.csrf_token.value);
+    verificationData.append('face_consent', '1');
+    verificationData.append('attachment', idImageInput.files[0]);
+    verificationData.append('selfie', selfieBlob, 'selfie.jpg');
+    idImageInput.disabled = true;
+    faceConsent.disabled = true;
+    startFaceScan.disabled = true;
+    manualIdentityReview.disabled = true;
+    onBehalfToggle.disabled = true;
+
+    try {
+      let response;
+      try {
+        response = await fetch('verify_identity.php', {method: 'POST', body: verificationData});
+      } catch (error) {
+        allowManualReview('The verification service could not be reached. Staff can review your ID instead.');
+        return;
+      }
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        identityStatus.className = 'identity-status mismatch';
+        identityStatus.textContent = result.error || 'The face comparison could not be completed. Check the ID image and try again.';
+        return;
+      }
+      if (result.result === 'match') {
+        setIdentityResult('match', result.message);
+      } else if (result.result === 'mismatch') {
+        setIdentityResult('mismatch', result.message);
+      } else {
+        allowManualReview(result.message || 'Automatic matching is unavailable. Staff can review your ID instead.');
+      }
+    } catch (error) {
+      identityStatus.className = 'identity-status mismatch';
+      identityStatus.textContent = 'The verification response was invalid. Please try the face check again.';
+    } finally {
+      idImageInput.disabled = false;
+      faceConsent.disabled = false;
+      startFaceScan.disabled = !idImageInput.files.length || !faceConsent.checked;
+      onBehalfToggle.disabled = false;
+      captureFace.disabled = false;
+    }
+  });
+
+  manualIdentityReview.addEventListener('click', async () => {
+    if (!idImageInput.files.length) return;
+    stopFaceCamera();
+    manualIdentityReview.disabled = true;
+    identityStatus.textContent = 'Requesting staff review…';
+
+    const reviewData = new FormData();
+    reviewData.append('csrf_token', requestForm.elements.csrf_token.value);
+    reviewData.append('manual_review', '1');
+    reviewData.append('attachment', idImageInput.files[0]);
+
+    try {
+      const response = await fetch('verify_identity.php', {method: 'POST', body: reviewData});
+      const result = await response.json();
+      if (!response.ok || !result.success || result.result !== 'review') {
+        throw new Error(result.error || 'Staff review authorization failed.');
+      }
+      setIdentityResult('review', result.message);
+    } catch (error) {
+      allowManualReview('Could not authorize staff review. Please try again.');
+    } finally {
+      manualIdentityReview.disabled = false;
+    }
+  });
+
   requestForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     formError.hidden = true;
+    if (!identityReady || !['match', 'review'].includes(identityMode.value)) {
+      formError.textContent = 'Complete the ID and face checks or obtain staff-review authorization before submitting.';
+      formError.hidden = false;
+      return;
+    }
 
-    const submitBtn = requestForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting…';
+    submitRequest.disabled = true;
+    submitRequest.textContent = 'Submitting…';
 
     try {
       const res = await fetch('submit_request.php', {
@@ -699,9 +605,14 @@ $residentName = $_SESSION['resident_name'] ?? '';
 
       if (data.success) {
         refDisplay.textContent = data.reference_number;
+        queueRefDisplay.textContent = String(data.queue_number).padStart(4, '0');
+        identitySubmissionNotice.textContent = data.identity_review_required
+          ? 'Your ID document will be checked by staff before the request is processed.'
+          : 'Government ID text was detected and your face matched the ID photo. Staff must still verify that the ID is genuine.';
         requestForm.hidden = true;
         modalSuccess.hidden = false;
         requestForm.reset();
+        resetIdentityCheck();
       } else {
         formError.textContent = data.error || 'Something went wrong. Please try again.';
         formError.hidden = false;
@@ -710,12 +621,40 @@ $residentName = $_SESSION['resident_name'] ?? '';
       formError.textContent = 'Could not reach the server. Please check your connection and try again.';
       formError.hidden = false;
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit request';
+      submitRequest.disabled = !identityReady;
+      submitRequest.textContent = 'Submit request';
     }
   });
 
   document.getElementById('successClose').addEventListener('click', closeModal);
+
+  async function refreshPublicQueue() {
+    const currentLabel = document.getElementById('queueNowServingLabel');
+    const currentNumber = document.getElementById('queueNowServingNumber');
+    const lastCalled = document.getElementById('queueLastCalled');
+    const waitingLabel = document.getElementById('queueWaitingCount');
+    try {
+      const response = await fetch('get_queue_status.php');
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Queue status unavailable.');
+      currentLabel.textContent = data.current_number === null ? 'Queue not currently serving' : 'Now serving queue no.';
+      currentNumber.textContent = data.current_number === null
+        ? '—'
+        : String(data.current_number).padStart(4, '0');
+      const calledTime = data.called_at
+        ? new Date(data.called_at.replace(' ', 'T')).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})
+        : '';
+      lastCalled.textContent = data.current_number !== null && calledTime ? `Called at ${calledTime}` : '';
+      waitingLabel.textContent = `${data.waiting_count} waiting · ${data.last_number} tickets assigned today`;
+    } catch (error) {
+      currentLabel.textContent = 'Queue status temporarily unavailable';
+      currentNumber.textContent = '—';
+      lastCalled.textContent = '';
+      waitingLabel.textContent = 'Please check again shortly.';
+    }
+  }
+  refreshPublicQueue();
+  window.setInterval(refreshPublicQueue, 10000);
 
   // Notifications
   if (isLoggedIn) {
@@ -833,6 +772,15 @@ $residentName = $_SESSION['resident_name'] ?? '';
 
   trackBtn.addEventListener('click', trackRequest);
   refInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') trackRequest(); });
+  document.querySelectorAll('.home-logo-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const destination = new URL(link.href, window.location.href);
+      if (destination.pathname === window.location.pathname) {
+        e.preventDefault();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      }
+    });
+  });
   // Scroll-reveal for section entrances
   const revealEls = document.querySelectorAll('.reveal');
   const revealObserver = new IntersectionObserver((entries) => {

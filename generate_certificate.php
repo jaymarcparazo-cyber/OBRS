@@ -81,14 +81,17 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
 
 <style nonce="<?= $csp_nonce ?>">
   :root{
-    --paper:#F3EEE1;
-    --ink:#211D16;
-    --ink-soft:#5B564A;
-    --blue:#1E3A5F;
-    --blue-deep:#122845;
+    --paper:#EAF4FB;
+    --paper-2:#E4F1E5;
+    --ink:#173042;
+    --ink-soft:#506A78;
+    --blue:#1685C7;
+    --blue-deep:#075184;
+    --green:#23833B;
+    --green-deep:#17632B;
     --red:#9B2B22;
-    --gold:#B08D3E;
-    --line:#C9C1AC;
+    --gold:#E6B92E;
+    --line:#B9D2DE;
   }
 
   *{
@@ -98,9 +101,9 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   body{
-    background:var(--blue-deep);
+    background:var(--paper);
     color:var(--ink);
-    font-family:Arial,Helvetica,sans-serif;
+    font-family:Calibri,'Segoe UI Variable','Segoe UI',Arial,sans-serif;
     min-height:100vh;
     display:flex;
     flex-direction:column;
@@ -119,13 +122,17 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   .toolbar a{
-    color:#C9D3E0;
+    color:var(--green-deep);
     font-size:13.5px;
   }
 
-  .print-btn{
-    background:var(--gold);
+  .toolbar a:hover{
     color:var(--blue-deep);
+  }
+
+  .print-btn{
+    background:var(--green);
+    color:#fff;
     border:none;
     padding:11px 22px;
     font-weight:600;
@@ -135,12 +142,12 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   .print-btn:hover{
-    filter:brightness(0.95);
+    background:var(--green-deep);
   }
 
   .cert{
     position:relative;
-    background:#FBF9F2;
+    background:#fff;
     border:1px solid var(--line);
     width:210mm;
     min-height:297mm;
@@ -205,7 +212,7 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   .cert-head .office{
-    font-family:Georgia,'Times New Roman',serif;
+    font-family:Calibri,'Segoe UI Variable','Segoe UI',Arial,sans-serif;
     font-weight:600;
     font-size:22px;
     color:var(--blue);
@@ -226,7 +233,7 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   .cert-title{
-    font-family:Georgia,'Times New Roman',serif;
+    font-family:Calibri,'Segoe UI Variable','Segoe UI',Arial,sans-serif;
     font-size:26px;
     font-weight:600;
     text-align:center;
@@ -338,7 +345,7 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
   .sig-name{
-    font-family:Georgia,'Times New Roman',serif;
+    font-family:Calibri,'Segoe UI Variable','Segoe UI',Arial,sans-serif;
     font-weight:600;
     font-size:14px;
     color:var(--ink);
@@ -387,13 +394,14 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
       min-height:100vh;
     }
   }
+
 </style>
 </head>
 
 <body>
 
 <div class="toolbar">
-    <a href="#" id="backLink">&larr; Back</a>
+    <a href="#" id="backLink">Back</a>
 <button class="print-btn" id="printBtn">
         Print / Save as PDF
     </button>
@@ -506,7 +514,9 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
             <div class="sig-block">
 
                 <div class="stamp">
-                    <img src="logo.jpg" alt="Official seal">
+                    <a href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>" aria-label="Return to homepage">
+                        <img src="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>" alt="Official seal">
+                    </a>
                 </div>
 
                 <div class="sig-line"></div>

@@ -4,6 +4,7 @@
 // Returns: { success: true, reference_number: "BC-2026-0007" } or { success: false, error: "..." }
 
 require_once __DIR__ . '/session_init.php';
+require_once __DIR__ . '/queue_helpers.php';
 ob_start(); // buffer output so a stray PHP warning can't corrupt the JSON response
 header('Content-Type: application/json');
 require __DIR__ . '/config.php';
@@ -23,6 +24,10 @@ if (empty($_SESSION['resident_id'])) {
     respond(401, ['success' => false, 'error' => 'Please log in to submit a request.', 'redirect' => 'resident_login.php']);
 }
 
+if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf_token'] ?? '')) {
+    respond(403, ['success' => false, 'error' => 'Invalid request. Refresh the page and try again.']);
+}
+
 $residentId = $_SESSION['resident_id'];
 $docCode    = trim($_POST['document_code'] ?? '');
 $purpose    = trim($_POST['purpose'] ?? '');
@@ -40,9 +45,8 @@ if (!$docCode || !$purpose) {
     respond(422, ['success' => false, 'error' => 'Please fill in every field.']);
 }
 
-// --- File upload validation (valid ID / supporting document) ---
-$allowedExt  = ['jpg', 'jpeg', 'png', 'pdf'];
-$maxBytes    = 5 * 1024 * 1024; // 5 MB
+// --- File upload validation (JPG/PNG ID image only) ---
+$maxBytes = 5 * 1024 * 1024;
 $uploadedFile = $_FILES['attachment'] ?? null;
 
 if (!$uploadedFile || $uploadedFile['error'] === UPLOAD_ERR_NO_FILE) {
@@ -57,11 +61,40 @@ if ($uploadedFile['size'] > $maxBytes) {
     respond(422, ['success' => false, 'error' => 'File is too large. Maximum size is 5MB.']);
 }
 
-$ext = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-if (!in_array($ext, $allowedExt, true)) {
-    respond(422, ['success' => false, 'error' => 'Only JPG, PNG, or PDF files are allowed.']);
+$fileInfo = new finfo(FILEINFO_MIME_TYPE);
+$mimeType = $fileInfo->file($uploadedFile['tmp_name']);
+if (!in_array($mimeType, ['image/jpeg', 'image/png'], true)) {
+    respond(422, ['success' => false, 'error' => 'Please upload a JPG or PNG ID image.']);
 }
 
+$identityMode = $_POST['identity_mode'] ?? '';
+$identityMatched = false;
+$identityReviewAllowed = false;
+$currentIdHash = hash_file('sha256', $uploadedFile['tmp_name']);
+if ($identityMode === 'match') {
+    $verification = $_SESSION['identity_verification'] ?? [];
+    $identityMatched = ($verification['resident_id'] ?? '') === (string)$residentId
+        && isset($verification['verified_at'], $verification['id_hash'])
+        && time() - (int)$verification['verified_at'] <= 600
+        && hash_equals($verification['id_hash'], $currentIdHash);
+} elseif ($identityMode === 'review') {
+    $review = $_SESSION['identity_review'] ?? [];
+    $identityReviewAllowed = ($review['resident_id'] ?? '') === (string)$residentId
+        && isset($review['authorized_at'], $review['id_hash'])
+        && time() - (int)$review['authorized_at'] <= 600
+        && hash_equals($review['id_hash'], $currentIdHash);
+}
+
+if (!$identityMatched && !$identityReviewAllowed) {
+    respond(422, ['success' => false, 'error' => 'Complete the face check or obtain staff-review authorization before submitting.']);
+}
+
+$imageInfo = getimagesize($uploadedFile['tmp_name']);
+if ($imageInfo === false || ($imageInfo['mime'] ?? '') !== $mimeType) {
+    respond(422, ['success' => false, 'error' => 'The uploaded ID image could not be read.']);
+}
+
+$ext = $mimeType === 'image/png' ? 'png' : 'jpg';
 $uploadDir = __DIR__ . '/uploads/';
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
@@ -98,6 +131,7 @@ try {
         $onBehalfOf ? $relationship : null,
     ]);
     $requestId = $pdo->lastInsertId();
+    $queueTicket = assign_request_queue_number($pdo, (int)$requestId);
 
     $refNumber = sprintf('%s-%s-%04d', $docCode, date('Y'), $requestId);
     $upd = $pdo->prepare('UPDATE requests SET reference_number = ? WHERE request_id = ?');
@@ -112,7 +146,10 @@ try {
         INSERT INTO request_attachments (request_id, file_path, file_label)
         VALUES (?, ?, ?)
     ');
-    $attIns->execute([$requestId, $publicPath, 'Valid ID']);
+    $attachmentLabel = $identityMatched
+        ? 'ID text and face comparison completed (staff must verify authenticity)'
+        : 'ID document pending staff identity review';
+    $attIns->execute([$requestId, $publicPath, $attachmentLabel]);
 
     $docNameStmt = $pdo->prepare('SELECT name FROM document_types WHERE document_type_id = ?');
     $docNameStmt->execute([$docType['document_type_id']]);
@@ -122,11 +159,22 @@ try {
         INSERT INTO notifications (resident_id, request_id, channel, message)
         VALUES (?, ?, "system", ?)
     ');
-    $notif->execute([$residentId, $requestId, "Your {$docName} request ({$refNumber}) has been submitted and is pending review."]);
+    $formattedQueueNumber = str_pad((string)$queueTicket['queue_number'], 4, '0', STR_PAD_LEFT);
+    $notif->execute([
+        $residentId,
+        $requestId,
+        "Your {$docName} request ({$refNumber}) has been submitted. Your queue number is {$formattedQueueNumber}.",
+    ]);
 
     $pdo->commit();
+    unset($_SESSION['identity_verification'], $_SESSION['identity_review']);
 
-    respond(200, ['success' => true, 'reference_number' => $refNumber]);
+    respond(200, [
+        'success' => true,
+        'reference_number' => $refNumber,
+        'queue_number' => $queueTicket['queue_number'],
+        'identity_review_required' => $identityReviewAllowed,
+    ]);
 } catch (Exception $e) {
     $pdo->rollBack();
     if (isset($destPath) && file_exists($destPath)) {

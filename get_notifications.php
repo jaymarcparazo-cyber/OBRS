@@ -12,10 +12,12 @@ if (empty($_SESSION['resident_id'])) {
 $residentId = $_SESSION['resident_id'];
 
 $stmt = $pdo->prepare('
-    SELECT notification_id, message, is_read, created_at
-    FROM notifications
-    WHERE resident_id = ?
-    ORDER BY created_at DESC
+    SELECT n.notification_id, n.request_id, n.message, n.is_read, n.created_at,
+           r.reference_number, r.status
+    FROM notifications n
+    LEFT JOIN requests r ON r.request_id = n.request_id
+    WHERE n.resident_id = ?
+    ORDER BY n.created_at DESC
     LIMIT 15
 ');
 $stmt->execute([$residentId]);

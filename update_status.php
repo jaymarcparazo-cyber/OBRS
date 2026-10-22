@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/admin_auth.php';
+require_once __DIR__ . '/queue_helpers.php';
 header('Content-Type: application/json');
 require __DIR__ . '/config.php';
 
@@ -21,9 +22,13 @@ if (!$requestId || !in_array($status, $validStatuses, true)) {
 }
 
 try {
+    $pdo->beginTransaction();
     $releasedAt = $status === 'released' ? ', released_at = NOW()' : '';
     $stmt = $pdo->prepare("UPDATE requests SET status = ?, handled_by = ? $releasedAt WHERE request_id = ?");
     $stmt->execute([$status, $_SESSION['staff_id'], $requestId]);
+    if (in_array($status, ['rejected', 'released'], true)) {
+        skip_request_queue_entry($pdo, $requestId);
+    }
     // the trg_requests_history_update trigger logs this change automatically
 
     // notify the resident in-app
@@ -49,8 +54,12 @@ try {
         $notif->execute([$reqInfo['resident_id'], $requestId, $message]);
     }
 
+    $pdo->commit();
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Could not update status.']);
 }
