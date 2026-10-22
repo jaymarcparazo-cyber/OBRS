@@ -9,6 +9,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <base href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>">
+<link rel="icon" type="image/jpeg" href="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>">
 <title>Barangay Lawacamulag, San Jose, Tarlac — Document Request Services</title>
 <link rel="stylesheet" href="<?= htmlspecialchars(app_asset_url('obrs.css'), ENT_QUOTES) ?>">
 </head>

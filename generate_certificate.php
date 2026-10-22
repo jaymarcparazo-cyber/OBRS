@@ -82,6 +82,7 @@ $certificateHomeUrl = app_asset_url('obrs.php');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpeg" href="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>">
 
 <title>
     <?= htmlspecialchars($req['document_name']) ?>

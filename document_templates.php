@@ -132,6 +132,7 @@ $certificateHomeUrl = app_asset_url('obrs.php');
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpeg" href="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>">
 <title>Certificate templates — Barangay Lawacamulag</title>
 <style nonce="<?= $csp_nonce ?>">
   :root{--paper:#EAF4FB;--ink:#173042;--ink-soft:#506A78;--blue:#1685C7;--blue-deep:#075184;--green:#23833B;--green-deep:#17632B;--gold:#E6B92E;--line:#B9D2DE;--red:#9B2B22}
