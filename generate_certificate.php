@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/session_init.php';
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/certificate_templates.php';
+$certificateSettings = load_certificate_settings($pdo);
 
 $ref = trim($_GET['ref'] ?? '');
 if (!$ref) {
@@ -10,7 +12,7 @@ if (!$ref) {
 $stmt = $pdo->prepare('
     SELECT r.request_id, r.reference_number, r.status, r.purpose, r.requested_at, r.updated_at, r.resident_id,
            r.on_behalf_of, r.beneficiary_name, r.beneficiary_civil_status, r.relationship,
-           dt.name AS document_name,
+           dt.name AS document_name, dt.certificate_title, dt.certificate_template,
            res.first_name, res.last_name, res.address, res.civil_status
     FROM requests r
     JOIN document_types dt ON dt.document_type_id = r.document_type_id
@@ -57,14 +59,22 @@ if ($req['on_behalf_of']) {
         : 'of legal age';
 }
 
-$address = $req['address'];
-
-// Fixed location details
-$barangayName = 'Lawacamulag';
-$municipality = 'San Jose';
-$province     = 'Tarlac';
-
+$certificateTemplate = $req['certificate_template'] ?: default_certificate_template();
+$certificateWording = render_certificate_template($certificateTemplate, [
+    'name' => strtoupper($fullName),
+    'civil_status' => $civilStatus,
+    'purpose' => $req['purpose'],
+    'issue_date' => date('F j, Y', strtotime($req['updated_at'])),
+    'barangay' => $certificateSettings['barangay_name'],
+    'municipality' => $certificateSettings['municipality'],
+    'province' => $certificateSettings['province'],
+]);
+$certificateTitle = $req['certificate_title'] ?: $req['document_name'];
 $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
+$certificateReference = $req['reference_number'];
+$requesterRelationship = $req['on_behalf_of'] ? $req['relationship'] : '';
+$certificateLogoUrl = app_asset_url('logo.jpg');
+$certificateHomeUrl = app_asset_url('obrs.php');
 ?>
 
 <!DOCTYPE html>
@@ -396,6 +406,7 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
   }
 
 </style>
+<link rel="stylesheet" href="<?= htmlspecialchars(app_asset_url('certificate_document.css'), ENT_QUOTES) ?>">
 </head>
 
 <body>
@@ -407,161 +418,10 @@ $verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
     </button>
 </div>
 
-<div class="cert">
-
-    <div class="watermark" aria-hidden="true">
-        <?php for ($i = 0; $i < 16; $i++): ?>
-            <div class="watermark-line">
-                OFFICIAL COPY
-                &nbsp;&nbsp;
-                BARANGAY <?= strtoupper(htmlspecialchars("$barangayName, $municipality, $province")) ?>
-                &nbsp;&nbsp;
-                OFFICIAL COPY
-            </div>
-        <?php endfor; ?>
-    </div>
-
-    <div class="cert-content">
-
-        <div class="cert-head">
-            <div class="rep">
-                Republic of the Philippines
-            </div>
-
-            <div class="office">
-                Barangay <?= htmlspecialchars("$barangayName, $municipality, $province") ?>
-            </div>
-
-            <div class="addr">
-                Barangay Hall, <?= htmlspecialchars("$barangayName, $municipality, $province") ?>, Philippines
-            </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="cert-title">
-            <?= htmlspecialchars($req['document_name']) ?>
-        </div>
-
-        <div class="cert-subtitle">
-            Office of the Punong Barangay
-        </div>
-
-        <div class="cert-body">
-
-            This is to certify that
-            <strong><?= htmlspecialchars(strtoupper($fullName)) ?></strong>,
-            of legal age,
-            <?= htmlspecialchars($civilStatus) ?>,
-            Filipino, and a resident of
-            Barangay <?= htmlspecialchars($barangayName) ?>,
-            <?= htmlspecialchars($municipality) ?>,
-            <?= htmlspecialchars($province) ?>,
-            is a bona fide resident of this barangay.
-
-            <br><br>
-
-            This certification is issued upon the request of the above-named person for
-            <strong><?= htmlspecialchars($req['purpose']) ?></strong>.
-
-            <br><br>
-
-            Issued this
-            <strong><?= date('jS', strtotime($req['updated_at'])) ?></strong>
-            day of
-            <strong><?= date('F', strtotime($req['updated_at'])) ?></strong>,
-            <strong><?= date('Y', strtotime($req['updated_at'])) ?></strong>
-            at Barangay <?= htmlspecialchars($barangayName) ?>,
-            <?= htmlspecialchars($municipality) ?>,
-            <?= htmlspecialchars($province) ?>,
-            Philippines.
-
-        </div>
-
-        <div class="cert-foot">
-
-            <div class="foot-left">
-
-                <div class="disclaimer">
-                    Not valid without the official dry seal of this office.
-                </div>
-
-                <div class="verify-block">
-
-                    <div class="verify-caption">
-
-                        <strong>Verify this document online.</strong>
-                        <br>
-
-                        Open the verification link from the official barangay portal.
-                        <br>
-
-                        <a
-                            class="mono"
-                            href="<?= htmlspecialchars($verifyUrl) ?>"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <?= htmlspecialchars($verifyUrl) ?>
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="sig-block">
-
-                <div class="stamp">
-                    <a href="<?= htmlspecialchars(app_asset_url('obrs.php'), ENT_QUOTES) ?>" aria-label="Return to homepage">
-                        <img src="<?= htmlspecialchars(app_asset_url('logo.jpg'), ENT_QUOTES) ?>" alt="Official seal">
-                    </a>
-                </div>
-
-                <div class="sig-line"></div>
-
-                <div class="sig-name">
-                    Hon. Punong Barangay
-                </div>
-
-                <div>
-                    Barangay Chairperson
-                </div>
-
-            </div>
-
-        </div>
-
-        <?php if ($req['on_behalf_of']): ?>
-
-            <div class="on-behalf-note">
-                Requested by
-                <?= htmlspecialchars($requesterName) ?>
-                (<?= htmlspecialchars($req['relationship']) ?>)
-                on behalf of the named recipient.
-            </div>
-
-        <?php endif; ?>
-
-        <div class="page-footer">
-
-            <span>
-                Reference No.
-                <span class="mono">
-                    <?= htmlspecialchars($req['reference_number']) ?>
-                </span>
-            </span>
-
-            <span>
-                Date issued: <?= $issueDate ?>
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
+<?php
+$onBehalfRelationship = $requesterRelationship;
+require __DIR__ . '/certificate_document.php';
+?>
 
 <script nonce="<?= $csp_nonce ?>">
 function smartBack() {

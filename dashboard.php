@@ -14,14 +14,12 @@ if ($statusFilter !== 'all' && !in_array($statusFilter, $filterStatuses, true)) 
 $sql = '
     SELECT r.request_id, r.resident_id, r.document_type_id, r.reference_number, r.status, r.purpose, r.requested_at,
            r.on_behalf_of, r.beneficiary_name, r.relationship,
-           q.queue_number, q.status AS queue_status,
            dt.name AS document_name,
            res.first_name, res.last_name, res.email, res.contact_number,
            ra.file_path AS attachment_path, ra.file_label AS attachment_label
     FROM requests r
     JOIN document_types dt ON dt.document_type_id = r.document_type_id
     JOIN residents res ON res.resident_id = r.resident_id
-    LEFT JOIN service_queue_entries q ON q.request_id = r.request_id
     LEFT JOIN (
         SELECT request_id, MIN(attachment_id) AS first_attachment_id
         FROM request_attachments
@@ -54,16 +52,6 @@ $requests = $stmt->fetchAll();
 $documentTypes = $pdo->query('SELECT document_type_id, name FROM document_types WHERE is_active = 1 ORDER BY name')->fetchAll();
 $residents = $pdo->query('SELECT resident_id, first_name, last_name, email FROM residents ORDER BY last_name, first_name')->fetchAll();
 $csrfToken = csrf_token();
-$todayQueueStmt = $pdo->prepare('SELECT last_number, current_number FROM service_queue_daily WHERE queue_date = CURRENT_DATE');
-$todayQueueStmt->execute();
-$todayQueue = $todayQueueStmt->fetch() ?: ['last_number' => 0, 'current_number' => null];
-$queueWaitingCountStmt = $pdo->prepare('
-    SELECT COUNT(*) FROM service_queue_entries q
-    JOIN requests r ON r.request_id = q.request_id
-    WHERE q.queue_date = CURRENT_DATE AND q.status = "waiting" AND r.status <> "cancelled"
-');
-$queueWaitingCountStmt->execute();
-$queueWaitingCount = (int)$queueWaitingCountStmt->fetchColumn();
 
 // counts per status, for the filter tabs
 $countStmt = $pdo->query('SELECT status, COUNT(*) AS c FROM requests GROUP BY status');
@@ -175,11 +163,6 @@ $statusLabels = [
   .crud-button:hover{border-color:var(--blue);background:var(--paper);}
   .crud-button.danger{color:var(--red);}
   .create-row{display:flex;justify-content:flex-end;margin:-4px 0 16px;}
-  .queue-panel{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 20px;padding:15px;background:#fff;border:1px solid var(--line);}
-  .queue-current{margin-right:auto;color:var(--ink-soft);font-size:13px;}
-  .queue-current strong{display:block;color:var(--green-deep);font:600 24px 'IBM Plex Mono',monospace;}
-  .queue-controls{display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
-  .queue-controls input{width:110px;padding:7px;border:1px solid var(--line);font:inherit;}
   .crud-modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(18,40,69,0.55);
     align-items:center;justify-content:center;z-index:220;padding:18px;
@@ -196,9 +179,6 @@ $statusLabels = [
     .wrap{padding:22px 16px;}
     header{padding:14px 16px;gap:12px;}
     .staff-info{gap:8px;flex-wrap:wrap;justify-content:flex-end;text-align:right;}
-    .queue-panel{align-items:flex-start;}
-    .queue-current{width:100%;margin:0;}
-    .queue-controls{width:100%;}
     .requests-table-wrap{overflow:visible;border:0;background:transparent;}
     .requests-table-wrap table{min-width:0;display:block;background:transparent;border:0;}
     .requests-table-wrap thead{display:none;}
@@ -218,10 +198,6 @@ $statusLabels = [
     .staff-info{font-size:11px;}
     h1{font-size:23px;}
     .sub{font-size:13px;margin-bottom:18px;}
-    .queue-panel{padding:12px;}
-    .queue-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
-    .queue-controls input{width:100%;min-height:38px;}
-    .queue-controls .crud-button{min-height:38px;}
     .requests-table-wrap tbody{grid-template-columns:minmax(0,1fr);}
     .requests-table-wrap td{grid-template-columns:92px minmax(0,1fr);font-size:13px;}
     .filters{gap:6px;}
@@ -265,27 +241,14 @@ $statusLabels = [
 
 <div class="wrap">
   <h1>Document requests</h1>
-  <p class="sub">Manage document requests and today’s service queue. Cancelled requests remain in the Cancelled filter; only administrators can permanently delete them.</p>
+  <p class="sub">Manage document requests. Cancelled requests remain in the Cancelled filter; only administrators can permanently delete them.</p>
 
   <div class="create-row">
     <button type="button" class="crud-button" id="createRequestButton">Create request</button>
+    <?php if ($isAdmin): ?>
+      <a class="crud-button" href="document_templates.php">Certificate templates</a>
+    <?php endif; ?>
   </div>
-
-  <section class="queue-panel" aria-label="Service queue controls">
-    <div class="queue-current">
-      Now serving
-      <strong id="dashboardQueueCurrent"><?= $todayQueue['current_number'] !== null ? htmlspecialchars(str_pad((string)$todayQueue['current_number'], 4, '0', STR_PAD_LEFT)) : '—' ?></strong>
-      <span><span id="dashboardQueueWaiting"><?= $queueWaitingCount ?></span> waiting · <span id="dashboardQueueLast"><?= (int)$todayQueue['last_number'] ?></span> tickets assigned today</span>
-    </div>
-    <div class="queue-controls">
-      <button type="button" class="crud-button" data-queue-action="next">Call next</button>
-      <button type="button" class="crud-button" data-queue-action="repeat">Repeat</button>
-      <input type="number" id="manualQueueNumber" min="1" placeholder="Queue no." aria-label="Queue number to call">
-      <button type="button" class="crud-button" data-queue-action="set">Call number</button>
-      <button type="button" class="crud-button" data-queue-action="served">Mark served</button>
-    </div>
-    <p class="crud-notice" id="queueNotice" aria-live="polite"></p>
-  </section>
 
   <div class="filters">
     <a class="filter-pill <?= $statusFilter==='all'?'active':'' ?>" href="?status=all">All (<?= $counts['all'] ?? 0 ?>)</a>
@@ -309,7 +272,6 @@ $statusLabels = [
       <thead>
         <tr>
           <th>Reference</th>
-          <th>Queue ticket</th>
           <th>Requested by</th>
           <th>Document</th>
           <th>Purpose</th>
@@ -327,14 +289,6 @@ $statusLabels = [
         foreach ($requests as $r): ?>
           <tr data-request-id="<?= $r['request_id'] ?>">
             <td class="ref mono" data-label="Reference"><?= htmlspecialchars($r['reference_number']) ?></td>
-            <td class="mono" data-label="Queue ticket">
-              <?php if ($r['queue_number'] !== null): ?>
-                <?= htmlspecialchars(str_pad((string)$r['queue_number'], 4, '0', STR_PAD_LEFT)) ?>
-                <small class="identity-note"><?= htmlspecialchars(ucfirst($r['queue_status'] ?? 'waiting')) ?></small>
-              <?php else: ?>
-                —
-              <?php endif; ?>
-            </td>
             <td data-label="Requested by">
               <?= htmlspecialchars($r['first_name'] . ' ' . $r['last_name']) ?><br>
               <span style="color:var(--ink-soft);font-size:12px;"><?= htmlspecialchars($r['email']) ?></span>
@@ -487,54 +441,6 @@ $statusLabels = [
 
 <script nonce="<?= $csp_nonce ?>">
 const csrfToken = <?= json_encode($csrfToken) ?>;
-async function refreshQueueStatus() {
-  try {
-    const response = await fetch('get_queue_status.php');
-    const result = await response.json();
-    if (!response.ok || !result.success) throw new Error(result.error || 'Queue status is unavailable.');
-    document.getElementById('dashboardQueueCurrent').textContent = result.current_number === null
-      ? '—'
-      : String(result.current_number).padStart(4, '0');
-    document.getElementById('dashboardQueueWaiting').textContent = result.waiting_count;
-    document.getElementById('dashboardQueueLast').textContent = result.last_number;
-  } catch (error) {
-    document.getElementById('queueNotice').textContent = error.message || 'Queue status is unavailable.';
-  }
-}
-document.querySelectorAll('[data-queue-action]').forEach(button => {
-  button.addEventListener('click', async () => {
-    const notice = document.getElementById('queueNotice');
-    const queueNumber = document.getElementById('manualQueueNumber').value;
-    if (button.dataset.queueAction === 'set' && !queueNumber) {
-      notice.textContent = 'Enter the queue number you want to call.';
-      return;
-    }
-    button.disabled = true;
-    notice.textContent = '';
-    try {
-      const response = await fetch('manage_queue.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({
-          csrf_token: csrfToken,
-          action: button.dataset.queueAction,
-          queue_number: queueNumber
-        })
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || 'Could not update the queue.');
-      notice.textContent = result.message;
-      document.getElementById('manualQueueNumber').value = '';
-      await refreshQueueStatus();
-    } catch (error) {
-      notice.textContent = error.message || 'Could not reach the server.';
-    } finally {
-      button.disabled = false;
-    }
-  });
-});
-refreshQueueStatus();
-window.setInterval(refreshQueueStatus, 10000);
 
 function closeCrudModals() {
   document.querySelectorAll('.crud-modal-overlay').forEach(modal => modal.classList.remove('open'));

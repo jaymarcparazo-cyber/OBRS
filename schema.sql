@@ -15,9 +15,9 @@ CREATE TABLE residents (
     middle_name      VARCHAR(60),
     last_name        VARCHAR(60)  NOT NULL,
     suffix           VARCHAR(10),
-    birthdate        DATE         NOT NULL,
-    gender           ENUM('male','female','other') NOT NULL,
-    civil_status     ENUM('single','married','widowed','separated','divorced') NOT NULL,
+    birthdate        DATE         NULL,
+    gender           ENUM('male','female','other') NULL,
+    civil_status     ENUM('single','married','widowed','separated','divorced') NULL,
     address          VARCHAR(255) NOT NULL,
     contact_number   VARCHAR(20)  NOT NULL,
     email            VARCHAR(120) NOT NULL UNIQUE,
@@ -52,10 +52,37 @@ CREATE TABLE document_types (
     name               VARCHAR(120) NOT NULL,
     description        VARCHAR(255),
     requirements        TEXT,                           -- plain text list, or JSON if you prefer
+    certificate_title VARCHAR(120) NULL,
+    certificate_template LONGTEXT NULL,
     processing_days    INT          NOT NULL DEFAULT 1,
     fee                DECIMAL(8,2) NOT NULL DEFAULT 0.00,
     is_active          TINYINT(1)   NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
+
+CREATE TABLE certificate_settings (
+    settings_id       TINYINT UNSIGNED PRIMARY KEY,
+    republic_text     VARCHAR(120) NOT NULL,
+    barangay_name     VARCHAR(120) NOT NULL,
+    municipality      VARCHAR(120) NOT NULL,
+    province          VARCHAR(120) NOT NULL,
+    office_address    VARCHAR(255) NOT NULL,
+    office_subtitle   VARCHAR(160) NOT NULL,
+    disclaimer        VARCHAR(255) NOT NULL,
+    signatory_name    VARCHAR(120) NOT NULL,
+    signatory_title   VARCHAR(120) NOT NULL,
+    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO certificate_settings (
+    settings_id, republic_text, barangay_name, municipality, province,
+    office_address, office_subtitle, disclaimer, signatory_name, signatory_title
+) VALUES (
+    1, 'Republic of the Philippines', 'Lawacamulag', 'San Jose', 'Tarlac',
+    'Barangay Hall, Lawacamulag, San Jose, Tarlac, Philippines',
+    'Office of the Punong Barangay',
+    'Not valid without the official dry seal of this office.',
+    'Hon. Punong Barangay', 'Barangay Chairperson'
+);
 
 -- ---------------------------------------------------------
 -- Document requests (the core transaction table)
@@ -66,7 +93,12 @@ CREATE TABLE requests (
     resident_id        INT          NOT NULL,
     document_type_id   INT          NOT NULL,
     purpose            VARCHAR(255) NOT NULL,
-    status             ENUM('pending','processing','approved','rejected','ready_for_pickup','released')
+    on_behalf_of       TINYINT(1) NOT NULL DEFAULT 0,
+    beneficiary_name   VARCHAR(120) NULL,
+    beneficiary_address VARCHAR(255) NULL,
+    beneficiary_civil_status ENUM('single','married','widowed','separated','divorced') NULL,
+    relationship       VARCHAR(60) NULL,
+    status             ENUM('pending','processing','approved','rejected','ready_for_pickup','released','cancelled')
                         NOT NULL DEFAULT 'pending',
     remarks            VARCHAR(255),
     handled_by          INT,                             -- staff_id who last actioned it
@@ -100,7 +132,7 @@ CREATE TABLE request_attachments (
 CREATE TABLE request_status_history (
     history_id   INT AUTO_INCREMENT PRIMARY KEY,
     request_id   INT NOT NULL,
-    status       ENUM('pending','processing','approved','rejected','ready_for_pickup','released') NOT NULL,
+    status       ENUM('pending','processing','approved','rejected','ready_for_pickup','released','cancelled') NOT NULL,
     changed_by   INT,                                    -- staff_id, NULL if system-generated
     remarks      VARCHAR(255),
     changed_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -159,7 +191,8 @@ INSERT INTO document_types (code, name, description, requirements, processing_da
 ('COI', 'Certificate of Indigency',     'For residents applying for financial aid, medical assistance, or scholarships.',      'Valid ID', 1, 0.00),
 ('BPE', 'Business Permit Endorsement',  'Barangay-level clearance required before applying for a mayor''s permit.',            'Valid ID, DTI/SEC Registration', 2, 100.00),
 ('BID', 'Barangay ID',                  'Official resident identification issued by the barangay office.',                    'Valid ID, 1x1 photo', 3, 50.00),
-('GMC', 'Good Moral Character',         'Attests to standing in the community — commonly required by schools and employers.', 'Valid ID', 1, 30.00);
+('GMC', 'Good Moral Character', 'Attests to standing in the community — commonly required by schools and employers.', 'Valid ID', 1, 30.00),
+('FTJ', 'First-Time Jobseeker Certificate', 'Exempts first-time jobseekers from fees on government transactions and documents, per RA 11261.', 'Valid ID', 1, 0.00);
 
 -- =========================================================
 -- Helper: generate a reference number like BC-2026-0182

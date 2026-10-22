@@ -7,3 +7,8 @@ if (empty($_SESSION['staff_id'])) {
     header('Location: login.php');
     exit;
 }
+
+if (basename(parse_url($_SERVER['SCRIPT_NAME'] ?? '', PHP_URL_PATH) ?: '') === 'admin_auth.php') {
+    header('Location: dashboard.php');
+    exit;
+}

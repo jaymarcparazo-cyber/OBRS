@@ -26,7 +26,7 @@ try {
     $createDailyQueue = $pdo->prepare('INSERT IGNORE INTO service_queue_daily (queue_date) VALUES (?)');
     $createDailyQueue->execute([$queueDate]);
 
-    $dailyStmt = $pdo->prepare('SELECT last_number, current_number FROM service_queue_daily WHERE queue_date = ? FOR UPDATE');
+    $dailyStmt = $pdo->prepare('SELECT last_number, current_number, last_served FROM service_queue_daily WHERE queue_date = ? FOR UPDATE');
     $dailyStmt->execute([$queueDate]);
     $daily = $dailyStmt->fetch();
     $lastNumber = (int)$daily['last_number'];
@@ -56,14 +56,40 @@ try {
             WHERE queue_date = ? AND queue_number = ? AND status = "serving"
         ');
         $markServed->execute([$queueDate, $currentNumber]);
+
+        $nextStmt = $pdo->prepare('
+            SELECT q.request_id, q.queue_number
+            FROM service_queue_entries q
+            JOIN requests r ON r.request_id = q.request_id
+            WHERE q.queue_date = ? AND q.status = "waiting" AND r.status <> "cancelled"
+            ORDER BY q.queue_number
+            LIMIT 1
+            FOR UPDATE
+        ');
+        $nextStmt->execute([$queueDate]);
+        $next = $nextStmt->fetch();
+        $nextNumber = $next ? (int)$next['queue_number'] : null;
+
+        if ($next) {
+            $setServing = $pdo->prepare('UPDATE service_queue_entries SET status = "serving" WHERE request_id = ?');
+            $setServing->execute([$next['request_id']]);
+        }
+
         $updateDaily = $pdo->prepare('
             UPDATE service_queue_daily
-            SET current_number = NULL, last_served = ?, updated_by = ?
+            SET current_number = ?, last_served = ?, updated_by = ?
             WHERE queue_date = ?
         ');
-        $updateDaily->execute([$currentNumber, $staffId, $queueDate]);
+        $updateDaily->execute([$nextNumber, $currentNumber, $staffId, $queueDate]);
         $pdo->commit();
-        queue_respond(200, ['success' => true, 'current_number' => null, 'message' => 'Current number marked as served.']);
+        queue_respond(200, [
+            'success' => true,
+            'current_number' => $nextNumber,
+            'message' => $nextNumber === null
+                ? 'Current number marked as served. No waiting requests remain.'
+                : 'Current number marked as served. Now serving queue number '
+                    . str_pad((string)$nextNumber, 4, '0', STR_PAD_LEFT) . '.',
+        ]);
     }
 
     if ($action === 'set') {
