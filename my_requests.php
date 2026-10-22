@@ -7,7 +7,7 @@ $stmt = $pdo->prepare('
            r.on_behalf_of, r.beneficiary_name, r.relationship,
            dt.name AS document_name,
            q.queue_number, q.status AS queue_status,
-           ra.file_path AS attachment_path, ra.file_label AS attachment_label
+           ra.attachment_id, ra.file_path AS attachment_path, ra.file_label AS attachment_label
     FROM requests r
     JOIN document_types dt ON dt.document_type_id = r.document_type_id
     LEFT JOIN service_queue_entries q ON q.request_id = r.request_id
@@ -196,7 +196,7 @@ $statusLabels = [
             <td>
               <?php if ($r['attachment_path']): ?>
                 <?php $ext = strtolower(pathinfo($r['attachment_path'], PATHINFO_EXTENSION)); ?>
-                <span class="view-trigger" onclick="openAttachmentModal('<?= htmlspecialchars($r['attachment_path'], ENT_QUOTES) ?>', '<?= $ext ?>')">View</span>
+                <span class="view-trigger" data-attachment-id="<?= (int)$r['attachment_id'] ?>" data-ext="<?= htmlspecialchars($ext, ENT_QUOTES) ?>">View</span>
                 <?php if ($r['attachment_label'] === 'Valid ID (staff identity review required)'): ?>
                   <small class="identity-note identity-review">Staff identity review required</small>
                 <?php elseif ($r['attachment_label']): ?>
@@ -236,12 +236,11 @@ $statusLabels = [
 
 <script nonce="<?= $csp_nonce ?>">
   
-function openAttachmentModal(path, ext) {
+function openAttachmentModal(attachmentId, ext) {
   const content = document.getElementById('attachmentModalContent');
   if (['jpg','jpeg','png'].includes(ext)) {
+    const path = 'view_attachment.php?id=' + encodeURIComponent(attachmentId);
     content.innerHTML = '<img src="' + path + '" alt="Attachment">';
-  } else {
-    content.innerHTML = '<div class="pdf-preview-large">📄 PDF document<br><br><a href="' + path + '" target="_blank">Open in new tab</a></div>';
   }
   document.getElementById('attachmentModal').classList.add('open');
 }
@@ -272,7 +271,7 @@ async function cancelRequest(ref) {
 }
 document.addEventListener('click', function (e) {
   const v = e.target.closest('.view-trigger');
-  if (v) { openAttachmentModal(v.dataset.path, v.dataset.ext); return; }
+  if (v) { openAttachmentModal(v.dataset.attachmentId, v.dataset.ext); return; }
   const c = e.target.closest('.cancel-trigger');
   if (c) { cancelRequest(c.dataset.ref); return; }
   if (e.target.closest('.attachment-modal-close')) { closeAttachmentModal(); return; }

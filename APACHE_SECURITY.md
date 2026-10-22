@@ -1,5 +1,32 @@
 # Apache security hardening
 
+## Protect application source and private files
+
+The repository-root `.htaccess` disables directory listings, serves `obrs.php`
+as the directory entry point, and denies direct web requests to development
+directories, source/configuration artifacts, database scripts, and PHP files
+that are intended only to be included by other pages. Public application pages,
+assets, and authenticated PHP endpoints remain available. The `uploads`
+directory has its own rule to deny all direct requests; attachments are served
+through the authenticated `view_attachment.php` endpoint.
+
+Apache must allow `.htaccess` overrides for the application directory and have
+`mod_rewrite` enabled for the private-directory rules. On Ubuntu, the active
+site configuration can use:
+
+```apache
+<Directory /var/www/html/OBRS>
+    AllowOverride All
+</Directory>
+```
+
+Enable rewrite with `sudo a2enmod rewrite`, run `sudo apache2ctl configtest`,
+then reload Apache. On XAMPP, ensure `AllowOverride All` applies to the
+application directory and restart Apache. Verify that `/OBRS/schema.sql`,
+`/OBRS/face_verification/app.py`, and `/OBRS/.git/config` are denied while
+`/OBRS/obrs.php` and `/OBRS/obrs.css` still load. Adjust `/OBRS` in these
+example URLs if the application is installed at a different path.
+
 The ZAP report found missing CSP headers on root-level `robots.txt` and
 `sitemap.xml` responses and Apache version/signature disclosure. The PHP
 application already sets a nonce-based CSP for its PHP pages. The Apache
@@ -39,6 +66,31 @@ The `Server` header should no longer include the Apache version, and Apache
 generated error pages should not include a server signature. ZAP can still
 report the generic `Apache` product name; `ServerTokens Prod` hides version and
 platform details but does not remove the header entirely.
+
+## Protect uploaded ID images
+
+Uploaded resident ID images contain sensitive personal information. The
+`uploads/.htaccess` file disables directory listings and direct HTTP access;
+authorized dashboard pages serve images through `view_attachment.php`, which
+checks the logged-in staff session or resident ownership. Ensure Apache permits
+the `.htaccess` directives for this directory. On Ubuntu, the default
+`/var/www/html` configuration may disable overrides; add this to the active
+site configuration instead if needed:
+
+```apache
+<Directory /var/www/html/OBRS/uploads>
+    Options -Indexes
+    AllowOverride None
+    Require all denied
+</Directory>
+```
+
+Run `sudo apache2ctl configtest` and reload Apache after changing its
+configuration. On XAMPP, ensure the `htdocs` directory allows the
+`uploads/.htaccess` file to take effect, then restart Apache. Verify that a
+direct image URL and `/OBRS/uploads/` both return `403 Forbidden`; authorized
+users should still be able to view attachments from the dashboard or My
+Requests page.
 
 ## XAMPP on Windows
 

@@ -16,7 +16,7 @@ $sql = '
            r.on_behalf_of, r.beneficiary_name, r.relationship,
            dt.name AS document_name,
            res.first_name, res.last_name, res.email, res.contact_number,
-           ra.file_path AS attachment_path, ra.file_label AS attachment_label
+           ra.attachment_id, ra.file_path AS attachment_path, ra.file_label AS attachment_label
     FROM requests r
     JOIN document_types dt ON dt.document_type_id = r.document_type_id
     JOIN residents res ON res.resident_id = r.resident_id
@@ -302,7 +302,7 @@ $statusLabels = [
             <td data-label="Attachment">
               <?php if ($r['attachment_path']): ?>
                 <?php $ext = strtolower(pathinfo($r['attachment_path'], PATHINFO_EXTENSION)); ?>
-                  <button type="button" class="view-trigger" data-path="<?= htmlspecialchars($r['attachment_path'], ENT_QUOTES) ?>" data-ext="<?= $ext ?>">Review ID</button>
+                  <button type="button" class="view-trigger" data-attachment-id="<?= (int)$r['attachment_id'] ?>" data-ext="<?= $ext ?>">Review ID</button>
                   <?php if (in_array($r['attachment_label'], [
                     'ID document pending staff identity review',
                     'Valid ID (staff identity review required)',
@@ -542,12 +542,11 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeCrudModals();
 });
 
-function openAttachmentModal(path, ext) {
+function openAttachmentModal(attachmentId, ext) {
   const content = document.getElementById('attachmentModalContent');
   if (['jpg','jpeg','png'].includes(ext)) {
+    const path = 'view_attachment.php?id=' + encodeURIComponent(attachmentId);
     content.innerHTML = '<img src="' + path + '" alt="Attachment">';
-  } else {
-    content.innerHTML = '<div class="pdf-preview-large">📄 PDF document<br><br><a href="' + path + '" target="_blank">Open in new tab</a></div>';
   }
   document.getElementById('attachmentModal').classList.add('open');
 }
@@ -579,7 +578,7 @@ async function updateStatus(requestId, newStatus, selectEl) {
 }
 document.addEventListener('click', function (e) {
   const v = e.target.closest('.view-trigger');
-  if (v) { openAttachmentModal(v.dataset.path, v.dataset.ext); return; }
+  if (v) { openAttachmentModal(v.dataset.attachmentId, v.dataset.ext); return; }
   if (e.target.closest('.attachment-modal-close')) { closeAttachmentModal(); return; }
   if (e.target.id === 'attachmentModal') closeAttachmentModal();
 });
