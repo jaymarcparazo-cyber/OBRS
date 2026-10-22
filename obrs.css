@@ -98,7 +98,7 @@ nav.links a:hover::after{width:100%;}
 .notif-empty{padding:24px 16px;text-align:center;font-size:13px;color:var(--ink-soft);}
 
 /* HERO */
-.hero{padding:88px 0 72px;}
+.hero{min-height:calc(100vh - 112px);display:flex;align-items:center;padding:88px 0 72px;}
 .hero{background:linear-gradient(135deg,#EAF4FB 0%,#DCEEF8 55%,#E4F1E5 100%);}
 .hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:center;}
 .eyebrow-tag{
@@ -388,6 +388,7 @@ footer{background:var(--green-deep);color:#fff;border-top:3px solid var(--gold);
 }
 
 @media (max-width:860px){
+  .hero{min-height:0;display:block;}
   .hero-grid{grid-template-columns:1fr;}
   .cert-stage{margin-top:20px;}
   .services-grid{grid-template-columns:1fr;}
