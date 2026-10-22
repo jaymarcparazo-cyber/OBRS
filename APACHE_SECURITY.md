@@ -12,15 +12,19 @@ override the application's per-request nonce policy.
 From the repository directory on the server:
 
 ```sh
-sudo cp apache-obrs-security.conf /etc/apache2/conf-available/obrs-security.conf
+sudo cp apache-obrs-security.conf /etc/apache2/conf-available/zz-obrs-security.conf
 sudo a2enmod headers
-sudo a2enconf obrs-security
+sudo a2disconf obrs-security
+sudo a2enconf zz-obrs-security
 sudo apache2ctl configtest
 sudo systemctl reload apache2
 ```
 
-Only reload Apache if `configtest` reports `Syntax OK`. Check the exact paths
-from the ZAP report and the application-prefixed paths:
+The `zz-` prefix makes Apache load these `ServerTokens` and `ServerSignature`
+settings after Ubuntu's `security.conf`, which otherwise may override them.
+If `a2disconf obrs-security` reports that the old config is not enabled, that
+is harmless. Only reload Apache if `configtest` reports `Syntax OK`. Check the
+exact paths from the ZAP report and the application-prefixed paths:
 
 ```sh
 curl -sS -D - -o /dev/null http://localhost/robots.txt
