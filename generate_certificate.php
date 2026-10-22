@@ -64,27 +64,7 @@ $barangayName = 'Lawacamulag';
 $municipality = 'San Jose';
 $province     = 'Tarlac';
 
-// Build an absolute verification URL for the QR code
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-    ? 'https'
-    : 'http';
-
-$host = $_SERVER['HTTP_HOST'];
-
-$dir = rtrim(
-    str_replace(
-        basename($_SERVER['SCRIPT_NAME']),
-        '',
-        $_SERVER['SCRIPT_NAME']
-    ),
-    '/'
-);
-
-$verifyUrl = "{$scheme}://{$host}{$dir}/verify.php?ref="
-    . urlencode($req['reference_number']);
-
-$qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data='
-    . urlencode($verifyUrl);
+$verifyUrl = 'verify.php?ref=' . rawurlencode($req['reference_number']);
 ?>
 
 <!DOCTYPE html>
@@ -98,12 +78,6 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
     —
     <?= htmlspecialchars($req['reference_number']) ?>
 </title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
-      rel="stylesheet">
 
 <style nonce="<?= $csp_nonce ?>">
   :root{
@@ -126,7 +100,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   body{
     background:var(--blue-deep);
     color:var(--ink);
-    font-family:'Public Sans',sans-serif;
+    font-family:Arial,Helvetica,sans-serif;
     min-height:100vh;
     display:flex;
     flex-direction:column;
@@ -192,7 +166,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .watermark-line{
-    font-family:'IBM Plex Mono',monospace;
+    font-family:'Courier New',monospace;
     font-size:13px;
     font-weight:500;
     letter-spacing:0.25em;
@@ -231,7 +205,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .cert-head .office{
-    font-family:'Fraunces',serif;
+    font-family:Georgia,'Times New Roman',serif;
     font-weight:600;
     font-size:22px;
     color:var(--blue);
@@ -252,7 +226,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .cert-title{
-    font-family:'Fraunces',serif;
+    font-family:Georgia,'Times New Roman',serif;
     font-size:26px;
     font-weight:600;
     text-align:center;
@@ -300,7 +274,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .page-footer .mono{
-    font-family:'IBM Plex Mono',monospace;
+    font-family:'Courier New',monospace;
     color:var(--blue);
   }
 
@@ -327,15 +301,6 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
     gap:14px;
   }
 
-  .verify-block img{
-    border:1px solid var(--line);
-    padding:3px;
-    background:#fff;
-    flex-shrink:0;
-    width:90px;
-    height:90px;
-  }
-
   .verify-caption{
     font-size:10.5px;
     color:var(--ink-soft);
@@ -347,9 +312,9 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .verify-caption .mono{
-    font-family:'IBM Plex Mono',monospace;
+    font-family:'Courier New',monospace;
     color:var(--blue);
-    word-break:break-all;
+    overflow-wrap:anywhere;
     font-size:9.5px;
     text-decoration:none;
   }
@@ -373,7 +338,7 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
   }
 
   .sig-name{
-    font-family:'Fraunces',serif;
+    font-family:Georgia,'Times New Roman',serif;
     font-weight:600;
     font-size:14px;
     color:var(--ink);
@@ -515,25 +480,19 @@ $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=0&data
 
                 <div class="verify-block">
 
-                    <img
-                        src="<?= htmlspecialchars($qrUrl) ?>"
-                        alt="Verification QR code"
-                        width="90"
-                        height="90"
-                    >
-
                     <div class="verify-caption">
 
-                        <strong>Scan to verify authenticity.</strong>
+                        <strong>Verify this document online.</strong>
                         <br>
 
-                        Confirms this document was genuinely issued and unaltered.
+                        Open the verification link from the official barangay portal.
                         <br>
 
                         <a
                             class="mono"
                             href="<?= htmlspecialchars($verifyUrl) ?>"
                             target="_blank"
+                            rel="noopener noreferrer"
                         >
                             <?= htmlspecialchars($verifyUrl) ?>
                         </a>
