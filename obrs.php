@@ -178,15 +178,23 @@ $residentName = $_SESSION['resident_name'] ?? '';
     <div class="track-panel">
       <div>
         <h2 class="display">Already submitted a request?</h2>
-        <p>Enter your reference number to see where it is in the queue — no account needed.</p>
+        <?php if ($isLoggedIn): ?>
+          <p>Enter your reference number to see your request status and history.</p>
+        <?php else: ?>
+          <p>Log in to securely view the status and history of your requests.</p>
+        <?php endif; ?>
       </div>
       <div class="track-form">
-        <label for="ref">Reference number</label>
-        <div class="track-input-row">
-          <input id="ref" type="text" placeholder="e.g. BC-2026-0001">
-          <button type="button" id="trackBtn">Track</button>
-        </div>
-        <div id="trackResult"></div>
+        <?php if ($isLoggedIn): ?>
+          <label for="ref">Reference number</label>
+          <div class="track-input-row">
+            <input id="ref" type="text" placeholder="e.g. BC-2026-0001">
+            <button type="button" id="trackBtn">Track</button>
+          </div>
+          <div id="trackResult"></div>
+        <?php else: ?>
+          <a class="nav-cta" href="<?= htmlspecialchars(app_asset_url('resident_login.php'), ENT_QUOTES) ?>">Log in to track requests</a>
+        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -725,54 +733,56 @@ $residentName = $_SESSION['resident_name'] ?? '';
   const trackResult = document.getElementById('trackResult');
   const refInput = document.getElementById('ref');
 
-  const statusLabels = {
-    pending: 'Pending review',
-    processing: 'Processing',
-    approved: 'Approved',
-    rejected: 'Rejected',
-    ready_for_pickup: 'Ready for pickup',
-    released: 'Released',
-    cancelled: 'Cancelled'
-  };
+  if (trackBtn && trackResult && refInput) {
+    const statusLabels = {
+      pending: 'Pending review',
+      processing: 'Processing',
+      approved: 'Approved',
+      rejected: 'Rejected',
+      ready_for_pickup: 'Ready for pickup',
+      released: 'Released',
+      cancelled: 'Cancelled'
+    };
 
-  async function trackRequest(){
-    const ref = refInput.value.trim();
-    trackResult.innerHTML = '';
-    if (!ref) {
-      trackResult.innerHTML = '<p class="track-error">Please enter a reference number.</p>';
-      return;
-    }
-
-    trackBtn.disabled = true;
-    trackBtn.textContent = '...';
-
-    try {
-      const res = await fetch('track_request.php?ref=' + encodeURIComponent(ref));
-      const data = await res.json();
-
-      if (data.success) {
-        const r = data.request;
-        trackResult.innerHTML = `
-          <div class="track-result">
-            <div class="tr-status">${statusLabels[r.status] || r.status}</div>
-            <div class="tr-row"><span>Document</span><span>${r.document_name}</span></div>
-            <div class="tr-row"><span>Requested by</span><span>${r.first_name} ${r.last_name}</span></div>
-            <div class="tr-row"><span>Reference no.</span><span>${r.reference_number}</span></div>
-            <div class="tr-row"><span>Last updated</span><span>${r.updated_at}</span></div>
-          </div>`;
-      } else {
-        trackResult.innerHTML = `<p class="track-error">${data.error || 'Request not found.'}</p>`;
+    async function trackRequest(){
+      const ref = refInput.value.trim();
+      trackResult.innerHTML = '';
+      if (!ref) {
+        trackResult.innerHTML = '<p class="track-error">Please enter a reference number.</p>';
+        return;
       }
-    } catch (err) {
-      trackResult.innerHTML = '<p class="track-error">Could not reach the server. Please try again.</p>';
-    } finally {
-      trackBtn.disabled = false;
-      trackBtn.textContent = 'Track';
-    }
-  }
 
-  trackBtn.addEventListener('click', trackRequest);
-  refInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') trackRequest(); });
+      trackBtn.disabled = true;
+      trackBtn.textContent = '...';
+
+      try {
+        const res = await fetch('track_request.php?ref=' + encodeURIComponent(ref));
+        const data = await res.json();
+
+        if (data.success) {
+          const r = data.request;
+          trackResult.innerHTML = `
+            <div class="track-result">
+              <div class="tr-status">${statusLabels[r.status] || r.status}</div>
+              <div class="tr-row"><span>Document</span><span>${r.document_name}</span></div>
+              <div class="tr-row"><span>Requested by</span><span>${r.first_name} ${r.last_name}</span></div>
+              <div class="tr-row"><span>Reference no.</span><span>${r.reference_number}</span></div>
+              <div class="tr-row"><span>Last updated</span><span>${r.updated_at}</span></div>
+            </div>`;
+        } else {
+          trackResult.innerHTML = `<p class="track-error">${data.error || 'Request not found.'}</p>`;
+        }
+      } catch (err) {
+        trackResult.innerHTML = '<p class="track-error">Could not reach the server. Please try again.</p>';
+      } finally {
+        trackBtn.disabled = false;
+        trackBtn.textContent = 'Track';
+      }
+    }
+
+    trackBtn.addEventListener('click', trackRequest);
+    refInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') trackRequest(); });
+  }
   document.querySelectorAll('.home-logo-link').forEach(link => {
     link.addEventListener('click', (e) => {
       const destination = new URL(link.href, window.location.href);

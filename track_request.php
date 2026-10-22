@@ -3,8 +3,15 @@
 // Returns: { success: true, request: {...}, history: [...] } or { success: false, error: "..." }
 
 header('Content-Type: application/json');
-require __DIR__ . '/config.php';
 require_once __DIR__ . '/session_init.php';
+
+if (empty($_SESSION['resident_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Please log in to track your requests.']);
+    exit;
+}
+
+require __DIR__ . '/config.php';
 
 $ref = trim($_GET['ref'] ?? '');
 
@@ -22,9 +29,9 @@ $stmt = $pdo->prepare('
     FROM requests r
     JOIN document_types dt ON dt.document_type_id = r.document_type_id
     JOIN residents res ON res.resident_id = r.resident_id
-    WHERE r.reference_number = ?
+    WHERE r.reference_number = ? AND r.resident_id = ?
 ');
-$stmt->execute([$ref]);
+$stmt->execute([$ref, $_SESSION['resident_id']]);
 $request = $stmt->fetch();
 
 if (!$request) {
