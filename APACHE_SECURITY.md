@@ -1,0 +1,60 @@
+# Apache security hardening
+
+The ZAP report found missing CSP headers on root-level `robots.txt` and
+`sitemap.xml` responses and Apache version/signature disclosure. The PHP
+application already sets a nonce-based CSP for its PHP pages. The Apache
+configuration in `apache-obrs-security.conf` adds a restrictive policy only to
+the reported root resources (and their `/OBRS/` equivalents), so it does not
+override the application's per-request nonce policy.
+
+## Ubuntu Apache
+
+From the repository directory on the server:
+
+```sh
+sudo cp apache-obrs-security.conf /etc/apache2/conf-available/obrs-security.conf
+sudo a2enmod headers
+sudo a2enconf obrs-security
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
+
+Only reload Apache if `configtest` reports `Syntax OK`. Check the exact paths
+from the ZAP report and the application-prefixed paths:
+
+```sh
+curl -sS -D - -o /dev/null http://localhost/robots.txt
+curl -sS -D - -o /dev/null http://localhost/sitemap.xml
+curl -sS -D - -o /dev/null http://localhost/OBRS/robots.txt
+curl -sS -D - -o /dev/null http://localhost/OBRS/sitemap.xml
+```
+
+The responses should include the restrictive `Content-Security-Policy` header.
+The `Server` header should no longer include the Apache version, and Apache
+generated error pages should not include a server signature. ZAP can still
+report the generic `Apache` product name; `ServerTokens Prod` hides version and
+platform details but does not remove the header entirely.
+
+## XAMPP on Windows
+
+The same server-banner directives must be applied to the active Apache server
+configuration, not just the project directory. In XAMPP's Apache configuration,
+set:
+
+```apache
+ServerTokens Prod
+ServerSignature Off
+```
+
+Keep the `mod_headers` `LocationMatch` policy from
+`apache-obrs-security.conf` in an included Apache configuration file, then
+restart Apache and verify the response headers before rescanning.
+
+## Rescan scope
+
+Scan the actual application URL (for example, `http://192.168.1.29/OBRS/`) as
+well as the root URLs reported by ZAP if they are in scope. A report against
+`http://localhost/` is not equivalent to a scan of the deployed application.
+The informational user-controlled-attribute alerts should be rechecked if
+those rendering paths change; the reviewed report did not demonstrate script
+execution.
