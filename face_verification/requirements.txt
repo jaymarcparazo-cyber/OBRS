@@ -1,0 +1,11 @@
+numpy==1.23.5
+tensorflow==2.10.1
+keras==2.10.0
+opencv-python==4.9.0.80
+mtcnn==0.1.1
+setuptools==80.9.0
+deepface==0.0.97
+rapidocr-onnxruntime==1.4.4
+Flask==3.1.1
+Pillow==11.3.0
+waitress==3.0.2
