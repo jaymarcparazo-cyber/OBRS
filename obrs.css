@@ -359,7 +359,7 @@ footer{background:var(--green-deep);color:#fff;border-top:3px solid var(--gold);
 .track-result .tr-row span:last-child{color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
 .track-error{color:#F0B8B0;font-size:13px;margin-top:12px;}
 
-@media (max-width:1080px){
+@media (max-width:1400px){
   .nav{position:relative;padding:12px 20px;}
   .nav-toggle{
     width:42px;height:42px;padding:10px;

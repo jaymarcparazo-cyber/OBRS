@@ -379,7 +379,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
   });
 
   window.addEventListener('resize', () => {
-    if (window.innerWidth > 1080) closeNavigation();
+    if (window.innerWidth > 1400) closeNavigation();
   });
 
   document.addEventListener('keydown', (e) => {
