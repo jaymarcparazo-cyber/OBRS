@@ -8,6 +8,30 @@ ALTER TABLE residents
     MODIFY gender ENUM('male','female','other') NULL,
     MODIFY civil_status ENUM('single','married','widowed','separated','divorced') NULL;
 
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = 'residents' AND column_name = 'is_deleted'
+);
+SET @migration_sql = IF(@column_exists = 0,
+    'ALTER TABLE residents ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER is_verified',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE() AND table_name = 'residents' AND column_name = 'deleted_at'
+);
+SET @migration_sql = IF(@column_exists = 0,
+    'ALTER TABLE residents ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL AFTER is_deleted',
+    'DO 0'
+);
+PREPARE migration_statement FROM @migration_sql;
+EXECUTE migration_statement;
+DEALLOCATE PREPARE migration_statement;
+
 -- Allow requests to be made on behalf of another person.
 SET @column_exists = (
     SELECT COUNT(*) FROM information_schema.columns

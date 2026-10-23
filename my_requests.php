@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/resident_auth.php';
-require __DIR__ . '/config.php';
 
 $stmt = $pdo->prepare('
     SELECT r.reference_number, r.status, r.purpose, r.requested_at, r.updated_at,

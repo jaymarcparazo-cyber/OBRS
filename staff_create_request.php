@@ -47,7 +47,7 @@ $destination = $uploadDir . $storedName;
 $publicPath = 'uploads/' . $storedName;
 
 try {
-    $residentStmt = $pdo->prepare('SELECT resident_id FROM residents WHERE resident_id = ?');
+    $residentStmt = $pdo->prepare('SELECT resident_id FROM residents WHERE resident_id = ? AND is_deleted = 0');
     $residentStmt->execute([$residentId]);
     if (!$residentStmt->fetch()) {
         respond(422, ['success' => false, 'error' => 'The selected resident does not exist.']);

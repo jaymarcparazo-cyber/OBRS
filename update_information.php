@@ -1,6 +1,5 @@
 <?php
 require __DIR__ . '/resident_auth.php';
-require __DIR__ . '/config.php';
 
 $residentId = (int)$_SESSION['resident_id'];
 $accountStmt = $pdo->prepare('

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/session_init.php';
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/resident_account_helpers.php';
 require_once __DIR__ . '/certificate_templates.php';
 $certificateSettings = load_certificate_settings($pdo);
 
@@ -35,6 +36,11 @@ if (!in_array($req['status'], $allowedStatuses, true)) {
 // Access control: the owning resident, or any logged-in staff member
 $isResidentOwner = !empty($_SESSION['resident_id']) && $_SESSION['resident_id'] == $req['resident_id'];
 $isStaff = !empty($_SESSION['staff_id']);
+
+if ($isResidentOwner && !resident_account_is_active($pdo, (int)$_SESSION['resident_id'])) {
+    clear_resident_session();
+    $isResidentOwner = false;
+}
 
 if (!$isResidentOwner && !$isStaff) {
     http_response_code(403);

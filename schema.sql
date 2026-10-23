@@ -26,6 +26,8 @@ CREATE TABLE residents (
     valid_id_number  VARCHAR(60),
     valid_id_image   VARCHAR(255),
     is_verified      TINYINT(1)   NOT NULL DEFAULT 0,
+    is_deleted       TINYINT(1)   NOT NULL DEFAULT 0,
+    deleted_at       TIMESTAMP    NULL DEFAULT NULL,
     created_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

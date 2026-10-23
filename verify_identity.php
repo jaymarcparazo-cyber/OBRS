@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/session_init.php';
+require __DIR__ . '/config.php';
+require_once __DIR__ . '/resident_account_helpers.php';
 ob_start();
 header('Content-Type: application/json');
 
@@ -14,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     respond(405, ['success' => false, 'error' => 'Method not allowed.']);
 }
 
-if (empty($_SESSION['resident_id'])) {
+if (empty($_SESSION['resident_id']) || !resident_account_is_active($pdo, (int)$_SESSION['resident_id'])) {
+    clear_resident_session();
     respond(401, ['success' => false, 'error' => 'Please log in to continue.']);
 }
 

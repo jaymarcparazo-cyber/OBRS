@@ -50,7 +50,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $requests = $stmt->fetchAll();
 $documentTypes = $pdo->query('SELECT document_type_id, name FROM document_types WHERE is_active = 1 ORDER BY name')->fetchAll();
-$residents = $pdo->query('SELECT resident_id, first_name, last_name, email FROM residents ORDER BY last_name, first_name')->fetchAll();
+$residents = $pdo->query('SELECT resident_id, first_name, last_name, email FROM residents WHERE is_deleted = 0 ORDER BY last_name, first_name')->fetchAll();
 $csrfToken = csrf_token();
 
 // counts per status, for the filter tabs
@@ -248,6 +248,7 @@ $statusLabels = [
     <button type="button" class="crud-button" id="createRequestButton">Create request</button>
     <?php if ($isAdmin): ?>
       <a class="crud-button" href="document_templates.php">Certificate templates</a>
+      <a class="crud-button" href="admin_residents.php">Resident accounts</a>
     <?php endif; ?>
   </div>
 

@@ -9,18 +9,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($email && $password) {
-        $stmt = $pdo->prepare('SELECT resident_id, first_name, last_name, password_hash FROM residents WHERE email = ?');
+        $stmt = $pdo->prepare('SELECT resident_id, first_name, last_name, password_hash, is_deleted FROM residents WHERE email = ?');
         $stmt->execute([$email]);
         $resident = $stmt->fetch();
 
         if ($resident && password_verify($password, $resident['password_hash'])) {
-            $_SESSION['resident_id']   = $resident['resident_id'];
-            $_SESSION['resident_name'] = $resident['first_name'] . ' ' . $resident['last_name'];
-            header('Location: obrs.php');
-            exit;
+            if ((int)$resident['is_deleted'] === 1) {
+                $error = 'Admin deleted this account.';
+            } else {
+                session_regenerate_id(true);
+                $_SESSION['resident_id']   = $resident['resident_id'];
+                $_SESSION['resident_name'] = $resident['first_name'] . ' ' . $resident['last_name'];
+                header('Location: obrs.php');
+                exit;
+            }
         }
     }
-    $error = 'Incorrect email or password.';
+    if ($error === '') {
+        $error = 'Incorrect email or password.';
+    }
 }
 ?>
 <!DOCTYPE html>

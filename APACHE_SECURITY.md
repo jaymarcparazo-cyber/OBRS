@@ -10,6 +10,13 @@ assets, and authenticated PHP endpoints remain available. The `uploads`
 directory has its own rule to deny all direct requests; attachments are served
 through the authenticated `view_attachment.php` endpoint.
 
+Resident account management is available to admins from the dashboard.
+Deleted accounts are soft-deleted: login is blocked with “Admin deleted this
+account,” existing requests and history are retained, and an admin can restore
+the account. Apply the updated `schema_patch.sql` to existing databases before
+using this feature; fresh installations receive the account-status fields from
+`schema.sql`.
+
 Apache must allow `.htaccess` overrides for the application directory and have
 `mod_rewrite` enabled for the private-directory rules. On Ubuntu, the active
 site configuration can use:

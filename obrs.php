@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/session_init.php';
 $isLoggedIn = !empty($_SESSION['resident_id']);
+if ($isLoggedIn) {
+    require __DIR__ . '/config.php';
+    require_once __DIR__ . '/resident_account_helpers.php';
+    if (!resident_account_is_active($pdo, (int)$_SESSION['resident_id'])) {
+        clear_resident_session();
+        $isLoggedIn = false;
+    }
+}
 $residentName = $_SESSION['resident_name'] ?? '';
 ?>
 <!DOCTYPE html>

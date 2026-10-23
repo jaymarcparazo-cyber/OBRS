@@ -6,6 +6,6 @@ DirectoryIndex obrs.php
     RewriteRule ^(?:\.git|\.venv|\.vscode|face_verification|tests)(?:/|$) - [F,L,NC]
 </IfModule>
 
-<FilesMatch "(?i)(^\.|\.(?:sql|md|py|ps1|log|ini|env|json|ya?ml|toml|lock|dist|example)$|^(?:config|session_init|security_headers|admin_auth|resident_auth|queue_helpers|certificate_templates|certificate_document)\.php$)">
+<FilesMatch "(?i)(^\.|\.(?:sql|md|py|ps1|log|ini|env|json|ya?ml|toml|lock|dist|example)$|^(?:config|session_init|security_headers|admin_auth|resident_auth|resident_account_helpers|queue_helpers|certificate_templates|certificate_document)\.php$)">
     Require all denied
 </FilesMatch>
