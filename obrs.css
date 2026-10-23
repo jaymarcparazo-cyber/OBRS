@@ -359,7 +359,19 @@ footer{background:var(--green-deep);color:#fff;border-top:3px solid var(--gold);
 .track-result .tr-row span:last-child{color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
 .track-error{color:#F0B8B0;font-size:13px;margin-top:12px;}
 
-@media (max-width:1400px){
+@media (min-width:1081px) and (max-width:1400px){
+  .nav{gap:14px;padding-right:20px;padding-left:20px;}
+  .nav-menu{gap:12px;}
+  .brand{gap:8px;}
+  .brand-text .eyebrow{font-size:9px;letter-spacing:0.05em;}
+  .brand-text .name{font-size:15px;}
+  nav.links{gap:13px;font-size:13px;}
+  nav.links a{white-space:nowrap;}
+  .nav-actions{gap:8px;}
+  .nav-cta{padding:9px 12px;font-size:13px;white-space:nowrap;}
+}
+
+@media (max-width:1080px){
   .nav{position:relative;padding:12px 20px;}
   .nav-toggle{
     width:42px;height:42px;padding:10px;
