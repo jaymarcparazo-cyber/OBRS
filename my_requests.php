@@ -156,6 +156,7 @@ $statusLabels = [
       </div>
     </div>
     <a href="obrs.php">Home</a>
+    <a href="update_information.php">Update Information</a>
     <a href="resident_logout.php">Log out</a>
   </div>
 </header>

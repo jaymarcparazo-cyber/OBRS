@@ -35,6 +35,7 @@ $residentName = $_SESSION['resident_name'] ?? '';
         <a href="#contact">Contact</a>
         <?php if ($isLoggedIn): ?>
           <a href="my_requests.php">My requests</a>
+          <a href="update_information.php">Update Information</a>
         <?php endif; ?>
       </nav>
       <div class="nav-actions">
