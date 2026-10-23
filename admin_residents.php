@@ -13,6 +13,10 @@ $civilStatuses = ['single', 'married', 'widowed', 'separated', 'divorced'];
 $error = '';
 $success = '';
 $editId = filter_input(INPUT_GET, 'edit', FILTER_VALIDATE_INT) ?: 0;
+$view = $_GET['view'] ?? ($_POST['view'] ?? 'active');
+if (!is_string($view) || !in_array($view, ['active', 'deleted'], true)) {
+    $view = 'active';
+}
 $rawSearch = $_GET['q'] ?? '';
 $search = is_string($rawSearch) ? trim($rawSearch) : '';
 $form = [
@@ -50,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $residentId = filter_var($_POST['resident_id'] ?? null, FILTER_VALIDATE_INT) ?: 0;
 
     if ($action === 'delete' || $action === 'restore') {
+        $view = $action === 'delete' ? 'deleted' : 'active';
         if ($residentId < 1) {
             $error = 'Select a valid resident account.';
         } else {
@@ -192,22 +197,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$where = '';
-$params = [];
+$where = 'WHERE is_deleted = ?';
+$params = [$view === 'deleted' ? 1 : 0];
 if ($search !== '') {
-    $where = 'WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR contact_number LIKE ?';
+    $where .= ' AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR contact_number LIKE ?)';
     $like = '%' . $search . '%';
-    $params = [$like, $like, $like, $like];
+    array_push($params, $like, $like, $like, $like);
 }
 $listStmt = $pdo->prepare('
     SELECT resident_id, first_name, last_name, birthdate, gender, civil_status,
            address, contact_number, email, is_deleted, deleted_at, created_at
     FROM residents
     ' . $where . '
-    ORDER BY is_deleted ASC, last_name, first_name
+    ORDER BY last_name, first_name
 ');
 $listStmt->execute($params);
 $accounts = $listStmt->fetchAll();
+$accountCounts = $pdo->query('
+    SELECT is_deleted, COUNT(*) AS account_count
+    FROM residents
+    GROUP BY is_deleted
+')->fetchAll(PDO::FETCH_KEY_PAIR);
+$activeCount = (int)($accountCounts[0] ?? 0);
+$deletedCount = (int)($accountCounts[1] ?? 0);
 $showFormModal = $editId > 0
     || ($_SERVER['REQUEST_METHOD'] === 'POST'
         && in_array($_POST['action'] ?? '', ['create', 'update'], true));
@@ -257,6 +269,9 @@ function resident_form_value(array $form, string $field): string {
   .hint{font-size:11px;color:var(--ink-soft);margin:-4px 0 12px;}
   .accounts-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
   .accounts-heading h2{margin:0;}
+  .account-tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--line);}
+  .account-tab{padding:9px 12px;color:var(--blue-deep);text-decoration:none;border-bottom:3px solid transparent;font-size:13px;font-weight:600;}
+  .account-tab.active{border-color:var(--green);color:var(--green-deep);}
   .modal-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,35,48,.62);}
   .modal-overlay.open{display:flex;}
   .modal-box{position:relative;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-top:4px solid var(--green);border-radius:8px;padding:24px;box-shadow:0 18px 48px rgba(0,0,0,.28);}
@@ -287,10 +302,15 @@ function resident_form_value(array $form, string $field): string {
   <?php if ($success): ?><p class="msg success"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
   <section class="panel">
       <div class="accounts-heading">
-        <h2>Created accounts (<?= count($accounts) ?>)</h2>
-        <button type="button" id="openCreateResident">Add resident account</button>
+        <h2><?= $view === 'deleted' ? 'Deleted accounts' : 'Created accounts' ?> (<?= $view === 'deleted' ? $deletedCount : $activeCount ?>)</h2>
+        <?php if ($view === 'active'): ?><button type="button" id="openCreateResident">Add resident account</button><?php endif; ?>
       </div>
+      <nav class="account-tabs" aria-label="Resident account status">
+        <a class="account-tab <?= $view === 'active' ? 'active' : '' ?>" href="admin_residents.php?view=active">Created accounts (<?= $activeCount ?>)</a>
+        <a class="account-tab <?= $view === 'deleted' ? 'active' : '' ?>" href="admin_residents.php?view=deleted">Deleted accounts (<?= $deletedCount ?>)</a>
+      </nav>
       <form class="search" method="get">
+        <input type="hidden" name="view" value="<?= htmlspecialchars($view, ENT_QUOTES, 'UTF-8') ?>">
         <input type="search" name="q" value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Search name, email, or contact">
         <button type="submit">Search</button>
       </form>
@@ -313,12 +333,12 @@ function resident_form_value(array $form, string $field): string {
                   <td><?= htmlspecialchars($account['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
                   <td>
                     <div class="account-actions">
-                      <a class="button secondary" href="admin_residents.php?edit=<?= (int)$account['resident_id'] ?>">Edit</a>
-                      <form method="post" onsubmit="return confirm('<?= $account['is_deleted'] ? 'Restore' : 'Disable' ?> this resident account? Existing requests and records will be retained.');">
+                      <a class="button secondary" href="admin_residents.php?view=<?= htmlspecialchars($view, ENT_QUOTES, 'UTF-8') ?>&amp;edit=<?= (int)$account['resident_id'] ?>">Edit</a>
+                      <form method="post" onsubmit="return confirm('<?= $view === 'deleted' ? 'Are you sure you want to restore this account?' : 'Are you sure you want to delete this account?' ?>');">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="resident_id" value="<?= (int)$account['resident_id'] ?>">
-                        <input type="hidden" name="action" value="<?= $account['is_deleted'] ? 'restore' : 'delete' ?>">
-                        <button class="<?= $account['is_deleted'] ? '' : 'danger' ?>" type="submit"><?= $account['is_deleted'] ? 'Restore' : 'Delete' ?></button>
+                        <input type="hidden" name="action" value="<?= $view === 'deleted' ? 'restore' : 'delete' ?>">
+                        <button class="<?= $view === 'deleted' ? '' : 'danger' ?>" type="submit"><?= $view === 'deleted' ? 'Restore' : 'Delete' ?></button>
                       </form>
                     </div>
                   </td>
@@ -340,6 +360,7 @@ function resident_form_value(array $form, string $field): string {
     <?php if ($error && $showFormModal): ?><p class="msg error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
     <form method="post" id="residentAccountForm">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="view" value="<?= htmlspecialchars($view, ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="action" value="<?= $editId ? 'update' : 'create' ?>">
         <?php if ($editId): ?><input type="hidden" name="resident_id" value="<?= (int)$editId ?>"><?php endif; ?>
         <div class="row">
@@ -393,7 +414,7 @@ function resident_form_value(array $form, string $field): string {
     document.body.classList.remove('modal-open');
   }
 
-  openButton.addEventListener('click', openModal);
+  if (openButton) openButton.addEventListener('click', openModal);
   closeButton.addEventListener('click', closeModal);
   if (cancelButton) cancelButton.addEventListener('click', closeModal);
   modal.addEventListener('click', event => {
