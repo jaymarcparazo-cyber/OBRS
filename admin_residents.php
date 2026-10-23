@@ -208,6 +208,9 @@ $listStmt = $pdo->prepare('
 ');
 $listStmt->execute($params);
 $accounts = $listStmt->fetchAll();
+$showFormModal = $editId > 0
+    || ($_SERVER['REQUEST_METHOD'] === 'POST'
+        && in_array($_POST['action'] ?? '', ['create', 'update'], true));
 
 function resident_form_value(array $form, string $field): string {
     return htmlspecialchars((string)($form[$field] ?? ''), ENT_QUOTES, 'UTF-8');
@@ -231,7 +234,6 @@ function resident_form_value(array $form, string $field): string {
   .wrap{max-width:1440px;margin:0 auto;padding:28px;}
   h1{color:var(--blue-deep);font-size:26px;margin-bottom:4px;}
   .sub{color:var(--ink-soft);font-size:14px;margin-bottom:20px;}
-  .layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:22px;align-items:start;}
   .panel{background:#fff;border:1px solid var(--line);padding:20px;border-radius:6px;}
   h2{font-size:18px;color:var(--blue-deep);margin-bottom:14px;}
   label{display:block;font-size:12px;font-weight:600;margin-bottom:12px;}
@@ -253,8 +255,20 @@ function resident_form_value(array $form, string $field): string {
   .deleted{color:var(--red);font-weight:600;}
   .muted{color:var(--ink-soft);}
   .hint{font-size:11px;color:var(--ink-soft);margin:-4px 0 12px;}
-  @media(max-width:1000px){.layout{grid-template-columns:1fr}.wrap{padding:20px 14px}}
+  .accounts-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
+  .accounts-heading h2{margin:0;}
+  .modal-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,35,48,.62);}
+  .modal-overlay.open{display:flex;}
+  .modal-box{position:relative;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-top:4px solid var(--green);border-radius:8px;padding:24px;box-shadow:0 18px 48px rgba(0,0,0,.28);}
+  .modal-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
+  .modal-heading h2{margin:0;}
+  .modal-close{flex:0 0 auto;padding:2px 9px;border:0;background:transparent;color:var(--ink-soft);font-size:25px;line-height:1;}
+  .modal-close:hover{background:transparent;color:var(--red);}
+  .form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;}
+  body.modal-open{overflow:hidden;}
+  @media(max-width:1000px){.wrap{padding:20px 14px}}
   @media(max-width:600px){header{padding:12px 14px;align-items:flex-start}.nav{gap:10px;flex-wrap:wrap;justify-content:flex-end;font-size:11px}.row{grid-template-columns:1fr;gap:0}}
+  @media(max-width:600px){.modal-overlay{padding:8px}.modal-box{padding:18px}.accounts-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -269,47 +283,13 @@ function resident_form_value(array $form, string $field): string {
 <main class="wrap">
   <h1>Resident accounts</h1>
   <p class="sub">Create, review, update, disable, and restore resident accounts. Deletion disables login but preserves requests and history.</p>
-  <?php if ($error): ?><p class="msg error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+  <?php if ($error && !$showFormModal): ?><p class="msg error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
   <?php if ($success): ?><p class="msg success"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
-  <div class="layout">
-    <section class="panel">
-      <h2><?= $editId ? 'Edit resident account' : 'Add resident account' ?></h2>
-      <?php if ($editId && (int)$form['is_deleted'] === 1): ?><p class="msg error">This account is disabled.</p><?php endif; ?>
-      <form method="post">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
-        <input type="hidden" name="action" value="<?= $editId ? 'update' : 'create' ?>">
-        <?php if ($editId): ?><input type="hidden" name="resident_id" value="<?= (int)$editId ?>"><?php endif; ?>
-        <div class="row">
-          <label>First name<input name="first_name" value="<?= resident_form_value($form, 'first_name') ?>" maxlength="60" required></label>
-          <label>Last name<input name="last_name" value="<?= resident_form_value($form, 'last_name') ?>" maxlength="60" required></label>
-        </div>
-        <div class="row">
-          <label>Birthdate<input type="date" name="birthdate" value="<?= resident_form_value($form, 'birthdate') ?>" max="<?= date('Y-m-d') ?>" required></label>
-          <label>Gender<select name="gender" required><option value="">Select…</option>
-            <?php foreach ($genders as $gender): ?><option value="<?= $gender ?>" <?= $form['gender'] === $gender ? 'selected' : '' ?>><?= ucfirst($gender) ?></option><?php endforeach; ?>
-          </select></label>
-        </div>
-        <label>Civil status<select name="civil_status" required><option value="">Select…</option>
-          <?php foreach ($civilStatuses as $status): ?><option value="<?= $status ?>" <?= $form['civil_status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option><?php endforeach; ?>
-        </select></label>
-        <label>Address<input name="address" value="<?= resident_form_value($form, 'address') ?>" maxlength="255" required></label>
-        <div class="row">
-          <label>Contact number<input name="contact_number" value="<?= resident_form_value($form, 'contact_number') ?>" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required></label>
-          <label>Email<input type="email" name="email" value="<?= resident_form_value($form, 'email') ?>" maxlength="120" required></label>
-        </div>
-        <label><?= $editId ? 'Set/reset password (optional)' : 'Initial password' ?>
-          <input type="password" name="password" <?= $editId ? '' : 'required' ?> minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\s]).{8,}" autocomplete="new-password">
-        </label>
-        <label>Confirm password
-          <input type="password" name="confirm_password" <?= $editId ? '' : 'required' ?> minlength="8" autocomplete="new-password">
-        </label>
-        <p class="hint">Use at least 8 characters with uppercase and lowercase letters, a number, and a symbol.</p>
-        <button type="submit"><?= $editId ? 'Save account changes' : 'Create account' ?></button>
-        <?php if ($editId): ?> <a class="button secondary" href="admin_residents.php">Cancel edit</a><?php endif; ?>
-      </form>
-    </section>
-    <section class="panel">
-      <h2>Created accounts (<?= count($accounts) ?>)</h2>
+  <section class="panel">
+      <div class="accounts-heading">
+        <h2>Created accounts (<?= count($accounts) ?>)</h2>
+        <button type="button" id="openCreateResident">Add resident account</button>
+      </div>
       <form class="search" method="get">
         <input type="search" name="q" value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Search name, email, or contact">
         <button type="submit">Search</button>
@@ -348,8 +328,85 @@ function resident_form_value(array $form, string $field): string {
           </table>
         </div>
       <?php endif; ?>
-    </section>
-  </div>
+  </section>
 </main>
+<div class="modal-overlay<?= $showFormModal ? ' open' : '' ?>" id="residentFormModal" role="dialog" aria-modal="true" aria-labelledby="residentFormTitle">
+  <section class="modal-box">
+    <div class="modal-heading">
+      <h2 id="residentFormTitle"><?= $editId ? 'Edit resident account' : 'Add resident account' ?></h2>
+      <button type="button" class="modal-close" id="closeResidentModal" aria-label="Close">&times;</button>
+    </div>
+    <?php if ($editId && (int)$form['is_deleted'] === 1): ?><p class="msg error">This account is disabled.</p><?php endif; ?>
+    <?php if ($error && $showFormModal): ?><p class="msg error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
+    <form method="post" id="residentAccountForm">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="action" value="<?= $editId ? 'update' : 'create' ?>">
+        <?php if ($editId): ?><input type="hidden" name="resident_id" value="<?= (int)$editId ?>"><?php endif; ?>
+        <div class="row">
+          <label>First name<input name="first_name" value="<?= resident_form_value($form, 'first_name') ?>" maxlength="60" required></label>
+          <label>Last name<input name="last_name" value="<?= resident_form_value($form, 'last_name') ?>" maxlength="60" required></label>
+        </div>
+        <div class="row">
+          <label>Birthdate<input type="date" name="birthdate" value="<?= resident_form_value($form, 'birthdate') ?>" max="<?= date('Y-m-d') ?>" required></label>
+          <label>Gender<select name="gender" required><option value="">Select…</option>
+            <?php foreach ($genders as $gender): ?><option value="<?= $gender ?>" <?= $form['gender'] === $gender ? 'selected' : '' ?>><?= ucfirst($gender) ?></option><?php endforeach; ?>
+          </select></label>
+        </div>
+        <label>Civil status<select name="civil_status" required><option value="">Select…</option>
+          <?php foreach ($civilStatuses as $status): ?><option value="<?= $status ?>" <?= $form['civil_status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option><?php endforeach; ?>
+        </select></label>
+        <label>Address<input name="address" value="<?= resident_form_value($form, 'address') ?>" maxlength="255" required></label>
+        <div class="row">
+          <label>Contact number<input name="contact_number" value="<?= resident_form_value($form, 'contact_number') ?>" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required></label>
+          <label>Email<input type="email" name="email" value="<?= resident_form_value($form, 'email') ?>" maxlength="120" required></label>
+        </div>
+        <label><?= $editId ? 'Set/reset password (optional)' : 'Initial password' ?>
+          <input type="password" name="password" <?= $editId ? '' : 'required' ?> minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\s]).{8,}" autocomplete="new-password">
+        </label>
+        <label>Confirm password
+          <input type="password" name="confirm_password" <?= $editId ? '' : 'required' ?> minlength="8" autocomplete="new-password">
+        </label>
+        <p class="hint">Use at least 8 characters with uppercase and lowercase letters, a number, and a symbol.</p>
+        <div class="form-actions">
+          <button type="submit"><?= $editId ? 'Save account changes' : 'Create account' ?></button>
+          <?php if ($editId): ?><a class="button secondary" href="admin_residents.php">Cancel edit</a><?php else: ?><button type="button" class="button secondary" id="cancelCreateResident">Cancel</button><?php endif; ?>
+        </div>
+    </form>
+  </section>
+</div>
+<script nonce="<?= $csp_nonce ?>">
+(() => {
+  const modal = document.getElementById('residentFormModal');
+  const openButton = document.getElementById('openCreateResident');
+  const closeButton = document.getElementById('closeResidentModal');
+  const cancelButton = document.getElementById('cancelCreateResident');
+  const firstField = document.querySelector('#residentAccountForm input[name="first_name"]');
+
+  function openModal() {
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+    firstField.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+
+  openButton.addEventListener('click', openModal);
+  closeButton.addEventListener('click', closeModal);
+  if (cancelButton) cancelButton.addEventListener('click', closeModal);
+  modal.addEventListener('click', event => {
+    if (event.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+  if (modal.classList.contains('open')) {
+    document.body.classList.add('modal-open');
+    firstField.focus();
+  }
+})();
+</script>
 </body>
 </html>
