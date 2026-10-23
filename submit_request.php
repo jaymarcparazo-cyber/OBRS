@@ -176,9 +176,12 @@ try {
         'identity_review_required' => $identityReviewAllowed,
     ]);
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     if (isset($destPath) && file_exists($destPath)) {
         unlink($destPath); // clean up the orphaned file if the DB transaction failed
     }
-    respond(500, ['success' => false, 'error' => 'Could not submit your request. Please try again.', 'debug' => $e->getMessage()]);
+    error_log('Request submission failed: ' . $e->getMessage());
+    respond(500, ['success' => false, 'error' => 'Could not submit your request. Please try again.']);
 }
