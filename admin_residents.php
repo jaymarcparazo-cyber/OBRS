@@ -281,9 +281,23 @@ function resident_form_value(array $form, string $field): string {
   .modal-close:hover{background:transparent;color:var(--red);}
   .form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;}
   body.modal-open{overflow:hidden;}
+  .print-sheet{display:none;}
+  .print-sheet h1{margin-bottom:8px;}
+  .print-sheet .print-subtitle{margin-bottom:22px;color:var(--ink-soft);}
+  .print-details{width:100%;border-collapse:collapse;}
+  .print-details th,.print-details td{padding:11px;border:1px solid var(--line);font-size:14px;}
+  .print-details th{width:32%;background:var(--paper-2);text-transform:none;letter-spacing:0;}
   @media(max-width:1000px){.wrap{padding:20px 14px}}
   @media(max-width:600px){header{padding:12px 14px;align-items:flex-start}.nav{gap:10px;flex-wrap:wrap;justify-content:flex-end;font-size:11px}.row{grid-template-columns:1fr;gap:0}}
   @media(max-width:600px){.modal-overlay{padding:8px}.modal-box{padding:18px}.accounts-heading{align-items:flex-start;flex-direction:column}}
+  @media print{
+    @page{margin:18mm;}
+    body.printing > :not(.print-sheet){display:none!important;}
+    body.printing > .print-sheet{display:block!important;padding:0;color:#111;font-family:Arial,sans-serif;}
+    body.printing .print-sheet h1{color:#111;font-size:22px;}
+    body.printing .print-subtitle{color:#444;}
+    body.printing .print-details th{background:#eee!important;color:#111;}
+  }
 </style>
 </head>
 <body>
@@ -334,6 +348,17 @@ function resident_form_value(array $form, string $field): string {
                   <td>
                     <div class="account-actions">
                       <a class="button secondary" href="admin_residents.php?view=<?= htmlspecialchars($view, ENT_QUOTES, 'UTF-8') ?>&amp;edit=<?= (int)$account['resident_id'] ?>">Edit</a>
+                      <button type="button" class="print-account-button button secondary"
+                        data-first-name="<?= htmlspecialchars($account['first_name'], ENT_QUOTES, 'UTF-8') ?>"
+                        data-last-name="<?= htmlspecialchars($account['last_name'], ENT_QUOTES, 'UTF-8') ?>"
+                        data-birthdate="<?= htmlspecialchars($account['birthdate'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                        data-gender="<?= htmlspecialchars(ucfirst($account['gender'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                        data-civil-status="<?= htmlspecialchars(ucfirst($account['civil_status'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                        data-address="<?= htmlspecialchars($account['address'], ENT_QUOTES, 'UTF-8') ?>"
+                        data-contact="<?= htmlspecialchars($account['contact_number'], ENT_QUOTES, 'UTF-8') ?>"
+                        data-email="<?= htmlspecialchars($account['email'], ENT_QUOTES, 'UTF-8') ?>"
+                        data-status="<?= $account['is_deleted'] ? 'Deleted' : 'Active' ?>"
+                        data-created="<?= htmlspecialchars($account['created_at'], ENT_QUOTES, 'UTF-8') ?>">Print</button>
                       <form method="post" class="account-action-form" data-confirm-message="<?= $view === 'deleted' ? 'Are you sure you want to restore this account?' : 'Are you sure you want to delete this account?' ?>">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="resident_id" value="<?= (int)$account['resident_id'] ?>">
@@ -350,6 +375,23 @@ function resident_form_value(array $form, string $field): string {
       <?php endif; ?>
   </section>
 </main>
+<section class="print-sheet" aria-hidden="true">
+  <h1>Resident account information</h1>
+  <p class="print-subtitle">Barangay Lawacamulag, San Jose, Tarlac</p>
+  <table class="print-details">
+    <tbody>
+      <tr><th scope="row">Full name</th><td data-print-field="name"></td></tr>
+      <tr><th scope="row">Birthdate</th><td data-print-field="birthdate"></td></tr>
+      <tr><th scope="row">Gender</th><td data-print-field="gender"></td></tr>
+      <tr><th scope="row">Civil status</th><td data-print-field="civil-status"></td></tr>
+      <tr><th scope="row">Address</th><td data-print-field="address"></td></tr>
+      <tr><th scope="row">Contact number</th><td data-print-field="contact"></td></tr>
+      <tr><th scope="row">Email</th><td data-print-field="email"></td></tr>
+      <tr><th scope="row">Account status</th><td data-print-field="status"></td></tr>
+      <tr><th scope="row">Account created</th><td data-print-field="created"></td></tr>
+    </tbody>
+  </table>
+</section>
 <div class="modal-overlay<?= $showFormModal ? ' open' : '' ?>" id="residentFormModal" role="dialog" aria-modal="true" aria-labelledby="residentFormTitle">
   <section class="modal-box">
     <div class="modal-heading">
@@ -402,6 +444,33 @@ function resident_form_value(array $form, string $field): string {
   const closeButton = document.getElementById('closeResidentModal');
   const cancelButton = document.getElementById('cancelCreateResident');
   const firstField = document.querySelector('#residentAccountForm input[name="first_name"]');
+  const printSheet = document.querySelector('.print-sheet');
+
+  document.querySelectorAll('.print-account-button').forEach(button => {
+    button.addEventListener('click', () => {
+      const data = button.dataset;
+      const fields = {
+        name: `${data.firstName} ${data.lastName}`,
+        birthdate: data.birthdate || 'Not provided',
+        gender: data.gender || 'Not provided',
+        'civil-status': data.civilStatus || 'Not provided',
+        address: data.address,
+        contact: data.contact,
+        email: data.email,
+        status: data.status,
+        created: data.created
+      };
+      Object.entries(fields).forEach(([field, value]) => {
+        printSheet.querySelector(`[data-print-field="${field}"]`).textContent = value;
+      });
+      document.body.classList.add('printing');
+      window.print();
+    });
+  });
+
+  window.addEventListener('afterprint', () => {
+    document.body.classList.remove('printing');
+  });
 
   document.querySelectorAll('.account-action-form').forEach(form => {
     form.addEventListener('submit', event => {
