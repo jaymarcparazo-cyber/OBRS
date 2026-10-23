@@ -334,7 +334,7 @@ function resident_form_value(array $form, string $field): string {
                   <td>
                     <div class="account-actions">
                       <a class="button secondary" href="admin_residents.php?view=<?= htmlspecialchars($view, ENT_QUOTES, 'UTF-8') ?>&amp;edit=<?= (int)$account['resident_id'] ?>">Edit</a>
-                      <form method="post" onsubmit="return confirm('<?= $view === 'deleted' ? 'Are you sure you want to restore this account?' : 'Are you sure you want to delete this account?' ?>');">
+                      <form method="post" class="account-action-form" data-confirm-message="<?= $view === 'deleted' ? 'Are you sure you want to restore this account?' : 'Are you sure you want to delete this account?' ?>">
                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                         <input type="hidden" name="resident_id" value="<?= (int)$account['resident_id'] ?>">
                         <input type="hidden" name="action" value="<?= $view === 'deleted' ? 'restore' : 'delete' ?>">
@@ -402,6 +402,12 @@ function resident_form_value(array $form, string $field): string {
   const closeButton = document.getElementById('closeResidentModal');
   const cancelButton = document.getElementById('cancelCreateResident');
   const firstField = document.querySelector('#residentAccountForm input[name="first_name"]');
+
+  document.querySelectorAll('.account-action-form').forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!window.confirm(form.dataset.confirmMessage)) event.preventDefault();
+    });
+  });
 
   function openModal() {
     modal.classList.add('open');
